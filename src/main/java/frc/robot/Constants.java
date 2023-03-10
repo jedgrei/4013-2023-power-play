@@ -81,12 +81,13 @@ public final class Constants {
 			new Translation2d(-kWheelBase / 2, kTrackWidth / 2)
 		);
 
-		// maximum speeds and accelerations
-		public static final double kPhysicalMaxSpeedMetersPerSecond = 0;
-		public static final double kTeleDriveMaxAngularAccelerationUnitsPerSecond = 0;
-		public static final double kTeleDriveMaxSpeedMetersPerSecond = 0;
-		public static final double kTeleDriveMaxAngularSpeedRadiansPerSecond = 0;
-		public static final double kTeleDriveMaxAccelerationUnitsPerSecond = 0;
+		public static final double kPhysicalMaxSpeedMetersPerSecond = 5;
+        public static final double kPhysicalMaxAngularSpeedRadiansPerSecond = 4 * Math.PI;
+
+        public static final double kTeleDriveMaxSpeedMetersPerSecond = kPhysicalMaxSpeedMetersPerSecond / 4;
+        public static final double kTeleDriveMaxAngularSpeedRadiansPerSecond = kPhysicalMaxAngularSpeedRadiansPerSecond / 4;
+        public static final double kTeleDriveMaxAccelerationUnitsPerSecond = 3;
+        public static final double kTeleDriveMaxAngularAccelerationUnitsPerSecond = 3;
 	}
 
 	// other constants for arm
