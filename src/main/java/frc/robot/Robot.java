@@ -75,7 +75,7 @@ public class Robot extends TimedRobot {
 	public void joystickDrive(boolean fieldRelative) {
 		final double xSpeed = -xSpeedLimiter.calculate(MathUtil.applyDeadband(controller.getLeftY(), 0.02)) * SwerveDrive.maxSpeed;
 		final double ySpeed = -ySpeedLimiter.calculate(MathUtil.applyDeadband(controller.getLeftX(), 0.02)) * SwerveDrive.maxSpeed;
-		final double rotSpeed = -ySpeedLimiter.calculate(MathUtil.applyDeadband(controller.getRightX(), 0.02)) * SwerveDrive.maxAngularSpeed;
+		final double rotSpeed = -rotSpeedLimiter.calculate(MathUtil.applyDeadband(controller.getRightX(), 0.02)) * SwerveDrive.maxAngularSpeed;
 
 		swerve.drive(xSpeed, ySpeed, rotSpeed, fieldRelative);
 	}
