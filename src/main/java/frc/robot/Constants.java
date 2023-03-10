@@ -59,7 +59,7 @@ public final class Constants {
 		// physical attributes of the motors
 		public static final double kWheelDiameterMeters = Units.inchesToMeters(3);
 		public static final double kPowerGearRatio = 1 / 1; //TODO: find
-		public static final double kSpinGearRatio = 1 / 1;
+		public static final double kSpinGearRatio = 1 / 35.5;
 		public static final double kPowerEncoderRot2Meter = kPowerGearRatio * Math.PI * kWheelDiameterMeters;
 		public static final double kSpinEncoderRot2Rad = kSpinGearRatio * 2 * Math.PI;
 		public static final double kPowerEncoderRPM2MeterPerSec = kPowerEncoderRot2Meter / 60;

@@ -1,0 +1,28 @@
+ideas on how the whole thing is structured
+
+subsystems:
+- Arm
+-- has 3 CANSparkMax (elbowLeftMotor, elbowRightMotor, wristMotor)
+--- elbows should be run together always
+-- 
+
+- SwerveDrive
+-- has 4 SwerveWheel (frontLeft, frontRight, rearLeft, rearRight)
+-- has a ADIS16448_IMU (gyro)
+-- SwerveDriveOdometry (odometry)
+-- can be drive()ed with joystick
+--- drive(x, y, r):
+--- convert x, y, r to target positions for wheels
+---- use SwerveDriveKinematics
+--- setDesiredState() all wheels
+
+- SwerveWheel
+-- has 2 CANSparkMax (powerMotor, spinMotor)
+-- has 2 RelativeEncoder (powerEncoder, spinEncoder)
+-- has 2 PIDControllers (spinPid, powerPid) 
+-- has an AbsoluteEncoder (absoluteEncoder)
+-- can be setDesiredState()ed  
+--- setDesiredState(desired):
+--- optimize desired based on spinEncoder
+--- get power and spin from respective pids
+--- power wheels

@@ -4,9 +4,13 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.SwerveDrive;
 
 
 /**
@@ -16,29 +20,25 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  * project.
  */
 public class Robot extends TimedRobot {
-	private Command m_autonomousCommand;
-	private Command m_teleOpCommand;
+	// ------------------------------- MEMBERS ------------------------------- //
+	// subsystems
+	private final SwerveDrive swerve = new SwerveDrive();
 
-	private RobotContainer m_robotContainer;
+	// controllers + joystick limiters
+	private final XboxController controller = new XboxController(0);
+	private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(3);
+	private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(3);
+	private final SlewRateLimiter rotSpeedLimiter = new SlewRateLimiter(3);
 
-	/**
-	 * This function is run when the robot is first started up and should be used for any
-	 * initialization code.
-	 */
+
+	// ------------------------------- GENERAL ------------------------------- //
 	@Override
 	public void robotInit() {
 		// Instantiate our RobotContainer.  This will perform all our button bindings, and put our
 		// autonomous chooser on the dashboard.
-		m_robotContainer = new RobotContainer();
+		// m_robotContainer = new RobotContainer();
 	}
 
-	/**
-	 * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics
-	 * that you want ran during disabled, autonomous, teleoperated and test.
-	 *
-	 * <p>This runs after the mode specific periodic functions, but before LiveWindow and
-	 * SmartDashboard integrated updating.
-	 */
 	@Override
 	public void robotPeriodic() {
 		// Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
@@ -48,66 +48,52 @@ public class Robot extends TimedRobot {
 		CommandScheduler.getInstance().run();
 	}
 
-	/** This function is called once each time the robot enters Disabled mode. */
+	
+	// ------------------------------- DISABLED ------------------------------ //
 	@Override
 	public void disabledInit() {}
 
 	@Override
 	public void disabledPeriodic() {}
 
-	/** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
+	// ------------------------------ AUTONOMOUS ----------------------------- //
 	@Override
-	public void autonomousInit() {
-		m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+	public void autonomousInit() {}
 
-		// schedule the autonomous command (example)
-		if (m_autonomousCommand != null) {
-		m_autonomousCommand.schedule();
-		}
-	}
-
-	/** This function is called periodically during autonomous. */
 	@Override
 	public void autonomousPeriodic() {}
 
+	// -------------------------------- TELEOP ------------------------------- //
 	@Override
-	public void teleopInit() {
-		// This makes sure that the autonomous stops running when
-		// teleop starts running. If you want the autonomous to
-		// continue until interrupted by another command, remove
-		// this line or comment it out.
-		if (m_autonomousCommand != null) {
-		m_autonomousCommand.cancel();
-		}
+	public void teleopInit() {}
 
-		
-	}
-
-	/** This function is called periodically during operator control. */
 	@Override
 	public void teleopPeriodic() {
-		m_teleOpCommand = m_robotContainer.getTeleOpCommand();
-
-		if (m_teleOpCommand != null) {
-			m_teleOpCommand.schedule();
-		}
+		joystickDrive(true);
 	}
 
+	public void joystickDrive(boolean fieldRelative) {
+		final double xSpeed = -xSpeedLimiter.calculate(MathUtil.applyDeadband(controller.getLeftY(), 0.02)) * SwerveDrive.maxSpeed;
+		final double ySpeed = -ySpeedLimiter.calculate(MathUtil.applyDeadband(controller.getLeftX(), 0.02)) * SwerveDrive.maxSpeed;
+		final double rotSpeed = -ySpeedLimiter.calculate(MathUtil.applyDeadband(controller.getRightX(), 0.02)) * SwerveDrive.maxAngularSpeed;
+
+		swerve.drive(xSpeed, ySpeed, rotSpeed, fieldRelative);
+	}
+
+	// --------------------------------- TEST -------------------------------- //
 	@Override
 	public void testInit() {
 		// Cancels all running commands at the start of test mode.
 		CommandScheduler.getInstance().cancelAll();
 	}
 
-	/** This function is called periodically during test mode. */
 	@Override
 	public void testPeriodic() {}
 
-	/** This function is called once when the robot is first started up. */
+	// ------------------------------ SIMUlATION ----------------------------- //
 	@Override
 	public void simulationInit() {}
 
-	/** This function is called periodically whilst in simulation. */
 	@Override
 	public void simulationPeriodic() {}
 }
