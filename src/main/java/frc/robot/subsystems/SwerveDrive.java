@@ -1,109 +1,97 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
 package frc.robot.subsystems;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.ADIS16448_IMU;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.DriveConstants;
-import frc.robot.Constants.PortConstants;
 
 public class SwerveDrive extends SubsystemBase {
-    SwerveWheel frontLeft = new SwerveWheel(
-        PortConstants.flPower,
-        PortConstants.flSpin,
-        PortConstants.flPowerReversed,
-        PortConstants.flSpinReversed,
-        PortConstants.flAbsoluteOffset
-    );
-    SwerveWheel frontRight = new SwerveWheel(
-        PortConstants.frPower,
-        PortConstants.frSpin,
-        PortConstants.frPowerReversed,
-        PortConstants.frSpinReversed,
-        PortConstants.frAbsoluteOffset
-    );
-    SwerveWheel rearRight = new SwerveWheel(
-        PortConstants.rrPower,
-        PortConstants.rrSpin,
-        PortConstants.rrPowerReversed,
-        PortConstants.rrSpinReversed,
-        PortConstants.rrAbsoluteOffset
-    );
-    SwerveWheel rearLeft = new SwerveWheel(
-        PortConstants.rlPower,
-        PortConstants.rlSpin,
-        PortConstants.rlPowerReversed,
-        PortConstants.rlSpinReversed,
-        PortConstants.rlAbsoluteOffset
-    );
-    ADIS16448_IMU gyro;
-    SwerveDriveOdometry odometer = new SwerveDriveOdometry(
-        DriveConstants.kDriveKinematics,
-        new Rotation2d(0),
-        getModulePositions()
-    );
+	// ------------------------------ CONSTANTS ------------------------------ //
+	// speeds
+	public static final double maxSpeed = 3.0;
+	public static final double maxAngularSpeed = Math.PI;
 
-    public SwerveDrive() {
-        new Thread(() -> {
-            try {
-                Thread.sleep(1000);
-                zeroHeading();
-            }
-            catch (Exception e) {}
-        }).start();
-    }
+	// wheel locations
+	public static final Translation2d frontLeftLoc = new Translation2d();
+	public static final Translation2d frontRightLoc = new Translation2d();
+	public static final Translation2d rearRightLoc = new Translation2d();
+	public static final Translation2d rearLeftLoc = new Translation2d();
 
+	// wheel ports
+	public static final int flPowerPort = 0;
+	public static final int flSpinPort = 0;
+	public static final int frPowerPort = 0;
+	public static final int frSpinPort = 0;
+	public static final int rrPowerPort = 0;
+	public static final int rrSpinPort = 0;
+	public static final int rlPowerPort = 0;
+	public static final int rlSpinPort = 0;
 
-    public void zeroHeading() {
-        gyro.reset();
-    }
+	// ------------------------------- MEMBERS ------------------------------- //
+	// wheel modules
+	SwerveWheel frontLeft = new SwerveWheel(flPowerPort, flSpinPort);
+	SwerveWheel frontRight = new SwerveWheel(frPowerPort, frSpinPort);
+	SwerveWheel rearRight = new SwerveWheel(rrPowerPort, rrSpinPort);
+	SwerveWheel rearLeft = new SwerveWheel(rlPowerPort, rlSpinPort);
 
-    public double getHeading() {
-        return Math.IEEEremainder(gyro.getAngle(), 260);
-    }
+	// imu
+    ADIS16448_IMU imu;
 
-    public Rotation2d getRotation2d() {
-        return Rotation2d.fromDegrees(getHeading());
-    }
+	// odometry + kinematics
+	private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(
+		frontLeftLoc,
+		frontRightLoc,
+		rearRightLoc,
+		rearLeftLoc
+	);
+	private final SwerveDriveOdometry odometry = new SwerveDriveOdometry(
+		kinematics,
+		new Rotation2d(imu.getAngle()),
+		new SwerveModulePosition[] {
+			frontLeft.getPosition(),
+			frontRight.getPosition(),
+			rearLeft.getPosition(),
+			rearRight.getPosition(),
+		}
+	);
 
-    public Pose2d getPose() {
-        return odometer.getPoseMeters();
-    }
+	// ----------------------------- CONSTRUCTOR ----------------------------- //
+	public SwerveDrive() {
+		imu.reset();
+	}
 
-    public SwerveModulePosition[] getModulePositions() {
-        return new SwerveModulePosition[] {
-            frontLeft.getModulePosition(),
-            frontRight.getModulePosition(),
-            rearLeft.getModulePosition(),
-            rearRight.getModulePosition(),
-        };
-    }
+	// ------------------------------- PERIODIC ------------------------------ //
+	@Override
+	public void periodic() {
+		
+	}
 
-    public void resetOdometry(Pose2d pose) {
-        odometer.resetPosition(getRotation2d(), getModulePositions(), pose);
-    }
+	// ------------------------------- METHODS ------------------------------- //
+	
+	public Rotation2d getHeading() {
+		return new Rotation2d(imu.getAngle());
+	}
 
-    public void periodic() {
-        odometer.update(getRotation2d(), getModulePositions());
-    }
+	public void drive(double xSpeed, double ySpeed, double rotSpeed, boolean fieldRelative) {
+		SwerveModuleState[] states = kinematics.toSwerveModuleStates(
+			fieldRelative ?
+			ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rotSpeed, getHeading()) :
+			new ChassisSpeeds(xSpeed, ySpeed, rotSpeed)
+		);
 
-    public void stopModules() {
-        frontLeft.stop();
-        frontRight.stop();
-        rearLeft.stop();
-        rearRight.stop();
-    }
-
-    public void setModuleStates(SwerveModuleState[] desiredStates) {
-        SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
-        frontLeft.setDesiredState(desiredStates[0]);
-        frontLeft.setDesiredState(desiredStates[1]);
-        frontLeft.setDesiredState(desiredStates[2]);
-        frontLeft.setDesiredState(desiredStates[3]);
-    
-    }
+		SwerveDriveKinematics.desaturateWheelSpeeds(states, maxSpeed);
+		frontLeft.setDesiredState(states[0]);
+		frontRight.setDesiredState(states[1]);
+		rearRight.setDesiredState(states[2]);
+		rearLeft.setDesiredState(states[3]);
+	}
 }
