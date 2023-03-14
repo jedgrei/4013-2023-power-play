@@ -13,6 +13,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.ADIS16448_IMU;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class SwerveDrive extends SubsystemBase {
@@ -54,12 +55,12 @@ public class SwerveDrive extends SubsystemBase {
 	// ------------------------------- MEMBERS ------------------------------- //
 	// wheel modules
 	SwerveWheel frontLeft = new SwerveWheel(flPowerPort, flSpinPort, flSpinEncPort, 0);
-	SwerveWheel frontRight = new SwerveWheel(frPowerPort, frSpinPort, flSpinEncPort, 0);
-	SwerveWheel rearRight = new SwerveWheel(rrPowerPort, rrSpinPort, flSpinEncPort, 0);
-	SwerveWheel rearLeft = new SwerveWheel(rlPowerPort, rlSpinPort, flSpinEncPort, 0);
+	SwerveWheel frontRight = new SwerveWheel(frPowerPort, frSpinPort, frSpinEncPort, Math.PI/2);
+	SwerveWheel rearRight = new SwerveWheel(rrPowerPort, rrSpinPort, rrSpinEncPort, Math.PI);
+	SwerveWheel rearLeft = new SwerveWheel(rlPowerPort, rlSpinPort, rlSpinEncPort, 3*Math.PI/2);
 
 	// imu
-    ADIS16448_IMU imu;
+    ADIS16448_IMU imu = new ADIS16448_IMU();
 
 	private final SwerveDriveOdometry odometry = new SwerveDriveOdometry(
 		kinematics,
@@ -111,6 +112,110 @@ public class SwerveDrive extends SubsystemBase {
 		frontRight.setDesiredState(states[1]);
 		rearRight.setDesiredState(states[2]);
 		rearLeft.setDesiredState(states[3]);
+		// SmartDashboard.putString("target",
+		// 	Double.toString(states[0].speedMetersPerSecond) + "/" +
+		// 	Double.toString(states[1].speedMetersPerSecond) + "/" +
+		// 	Double.toString(states[2].speedMetersPerSecond) + "/" +
+		// 	Double.toString(states[3].speedMetersPerSecond) + "    " +
+		// 	Double.toString(states[0].angle.getDegrees()) + "/" +
+		// 	Double.toString(states[1].angle.getDegrees()) + "/" +
+		// 	Double.toString(states[2].angle.getDegrees()) + "/" +
+		// 	Double.toString(states[3].angle.getDegrees())
+		// );
+
+		SmartDashboard.putNumber("tflp", states[0].speedMetersPerSecond);
+		SmartDashboard.putNumber("tfrp", states[1].speedMetersPerSecond);
+		SmartDashboard.putNumber("trrp", states[2].speedMetersPerSecond);
+		SmartDashboard.putNumber("trlp", states[3].speedMetersPerSecond);
+		SmartDashboard.putNumber("tfls", states[0].angle.getDegrees());
+		SmartDashboard.putNumber("tfrs", states[1].angle.getDegrees());
+		SmartDashboard.putNumber("trrs", states[2].angle.getDegrees());
+		SmartDashboard.putNumber("trls", states[3].angle.getDegrees());
+
+		SmartDashboard.putNumber("aflp", frontLeft.getState().speedMetersPerSecond);
+		SmartDashboard.putNumber("afrp", frontRight.getState().speedMetersPerSecond);
+		SmartDashboard.putNumber("arrp", rearRight.getState().speedMetersPerSecond);
+		SmartDashboard.putNumber("arlp", rearLeft.getState().speedMetersPerSecond);
+		SmartDashboard.putNumber("afls", frontLeft.getState().angle.getDegrees());
+		SmartDashboard.putNumber("afrs", frontRight.getState().angle.getDegrees());
+		SmartDashboard.putNumber("arrs", rearRight.getState().angle.getDegrees());
+		SmartDashboard.putNumber("arls", rearLeft.getState().angle.getDegrees());
+
+		// SmartDashboard.putString("actual",
+		// 	frontLeft.getState().speedMetersPerSecond + "/" +
+		// 	frontRight.getState().speedMetersPerSecond + "/" +
+		// 	rearRight.getState().speedMetersPerSecond + "/" +
+		// 	rearLeft.getState().speedMetersPerSecond + "    " +
+		// 	frontLeft.getState().angle.getDegrees() + "/" +
+		// 	frontRight.getState().angle.getDegrees() + "/" +
+		// 	rearRight.getState().angle.getDegrees() + "/" +
+		// 	rearLeft.getState().angle.getDegrees()
+		// );
+	}
+
+	public void drive(SwerveModuleState[] states) {
+		SwerveDriveKinematics.desaturateWheelSpeeds(states, maxSpeed);
+		frontLeft.setDesiredState(states[0]);
+		frontRight.setDesiredState(states[1]);
+		rearRight.setDesiredState(states[2]);
+		rearLeft.setDesiredState(states[3]);
+
+		SmartDashboard.putNumber("tflp", states[0].speedMetersPerSecond);
+		SmartDashboard.putNumber("tfrp", states[1].speedMetersPerSecond);
+		SmartDashboard.putNumber("trrp", states[2].speedMetersPerSecond);
+		SmartDashboard.putNumber("trlp", states[3].speedMetersPerSecond);
+		SmartDashboard.putNumber("tfls", states[0].angle.getDegrees() % 360);
+		SmartDashboard.putNumber("tfrs", states[1].angle.getDegrees() % 360);
+		SmartDashboard.putNumber("trrs", states[2].angle.getDegrees() % 360);
+		SmartDashboard.putNumber("trls", states[3].angle.getDegrees() % 360);
+
+		SmartDashboard.putNumber("aflp", frontLeft.getState().speedMetersPerSecond);
+		SmartDashboard.putNumber("afrp", frontRight.getState().speedMetersPerSecond);
+		SmartDashboard.putNumber("arrp", rearRight.getState().speedMetersPerSecond);
+		SmartDashboard.putNumber("arlp", rearLeft.getState().speedMetersPerSecond);
+		SmartDashboard.putNumber("afls", frontLeft.getState().angle.getDegrees() % 360);
+		SmartDashboard.putNumber("afrs", frontRight.getState().angle.getDegrees() % 360);
+		SmartDashboard.putNumber("arrs", rearRight.getState().angle.getDegrees() % 360);
+		SmartDashboard.putNumber("arls", rearLeft.getState().angle.getDegrees() % 360);
+	}
+
+	public void stop() {
+		frontLeft.stop();
+		frontRight.stop();
+		rearRight.stop();
+		rearLeft.stop();
+	}
+
+	public void driveSpinToZero() {
+		// frontLeft.setDesiredState(new SwerveModuleState(
+		// 	0, new Rotation2d(0)
+		// ));
+		// frontRight.setDesiredState(new SwerveModuleState(
+		// 	0, new Rotation2d(0)
+		// ));
+		// rearRight.setDesiredState(new SwerveModuleState(
+		// 	0, new Rotation2d(0)
+		// ));
+		// rearLeft.setDesiredState(new SwerveModuleState(
+		// 	0, new Rotation2d(0)
+		// ));
+		SwerveModuleState[] states = new SwerveModuleState[] {
+			new SwerveModuleState(0, new Rotation2d(0)),
+			new SwerveModuleState(0, new Rotation2d(0)),
+			new SwerveModuleState(0, new Rotation2d(0)),
+			new SwerveModuleState(0, new Rotation2d(0))
+		};
+		drive(states);
+	}
+
+	public void driveForward() {
+		SwerveModuleState[] states = new SwerveModuleState[] {
+			new SwerveModuleState(1, new Rotation2d(0)),
+			new SwerveModuleState(1, new Rotation2d(0)),
+			new SwerveModuleState(1, new Rotation2d(0)),
+			new SwerveModuleState(1, new Rotation2d(0))
+		};
+		drive(states);
 	}
 
 	public void updateOdometry() {
@@ -118,5 +223,12 @@ public class SwerveDrive extends SubsystemBase {
 			getHeading(),
 			getPositions()
 		);
+	}
+
+	public void resetSpinEncoders() {
+		frontLeft.resetSpinEncoder();
+		frontRight.resetSpinEncoder();
+		rearRight.resetSpinEncoder();
+		rearLeft.resetSpinEncoder();
 	}
 }

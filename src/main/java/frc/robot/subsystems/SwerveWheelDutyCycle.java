@@ -14,7 +14,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 
-public class SwerveWheel {
+public class SwerveWheelDutyCycle {
 	// ------------------------------ CONSTANTS ------------------------------ //
 	// physical constants TODO: check wheel constants for accuracy
 	private static final double wheelDiam = Units.inchesToMeters(3);
@@ -30,15 +30,15 @@ public class SwerveWheel {
 
 	// controller constants TODO: tune nums
 	private static final double kpPower = 0.5, kiPower = 0, kdPower = 0;
-	private static final double kpSpin = 0.7, kiSpin = 0.1, kdSpin = 0.0;
+	private static final double kpSpin = 0.1, kiSpin = 0, kdSpin = 0;
 	private static final double ksPower = 1, kvPower = 3;
 	private static final double ksSpin = 1, kvSpin = 0.5;
 
 	// ------------------------------- MEMBERS ------------------------------- //
 	// motors + encoders
     private final CANSparkMax powerMotor, spinMotor;
-    private final RelativeEncoder powerEncoder, spinEncoder;
-    // private final DutyCycleEncoder spinEncoder;
+    private final RelativeEncoder powerEncoder;
+    private final DutyCycleEncoder spinEncoder;
     // private final double spinEncoderOffset;
 
 	// pid controllers + feedforward
@@ -53,20 +53,18 @@ public class SwerveWheel {
 	private final SimpleMotorFeedforward spinFeedforward = new SimpleMotorFeedforward(ksSpin, kvSpin);
     
 	// ----------------------------- CONSTRUCTOR ----------------------------- //
-    public SwerveWheel(int powerPort, int spinPort, int spinEncoderPort, double spinEncoderOffsetVal) {
+    public SwerveWheelDutyCycle(int powerPort, int spinPort, int spinEncoderPort, double spinEncoderOffsetVal) {
         powerMotor = new CANSparkMax(powerPort, MotorType.kBrushless);
         spinMotor = new CANSparkMax(spinPort, MotorType.kBrushless);
 
         powerEncoder = powerMotor.getEncoder();
-        spinEncoder = spinMotor.getEncoder();
-        // spinEncoder = new DutyCycleEncoder(spinEncoderPort);
+        spinEncoder = new DutyCycleEncoder(spinEncoderPort);
         // spinEncoderOffset = spinEncoderOffsetVal;
 
         powerEncoder.setPositionConversionFactor(powerPositionConversion);
         powerEncoder.setVelocityConversionFactor(powerVelocityConversion);
         // spinEncoder.setDistancePerRotation(2 * Math.PI);
-        spinEncoder.setPositionConversionFactor(Math.PI / 24);
-        spinEncoder.setVelocityConversionFactor(Math.PI / 24);
+        spinEncoder.setDistancePerRotation(Math.PI / 24);
 
         spinPid.enableContinuousInput(-Math.PI, Math.PI);
     }
@@ -74,34 +72,28 @@ public class SwerveWheel {
 	// ------------------------------- GETTERS ------------------------------- //
 
     public SwerveModuleState getState() {
-        // return new SwerveModuleState(powerEncoder.getVelocity(), new Rotation2d(spinEncoder.getDistance()));
-        return new SwerveModuleState(powerEncoder.getVelocity(), new Rotation2d(spinEncoder.getPosition()));
+        return new SwerveModuleState(powerEncoder.getVelocity(), new Rotation2d(spinEncoder.getDistance()));
     }
 
     public SwerveModulePosition getPosition() {
-        // return new SwerveModulePosition(powerEncoder.getPosition(), new Rotation2d(spinEncoder.getDistance()));
-        return new SwerveModulePosition(powerEncoder.getPosition(), new Rotation2d(spinEncoder.getPosition()));
+        return new SwerveModulePosition(powerEncoder.getPosition(), new Rotation2d(spinEncoder.getDistance()));
     }
 
 	// ------------------------------- METHODS ------------------------------- //
     public void resetEncoders() {
         powerEncoder.setPosition(0);
-        spinEncoder.setPosition(0);
-        // spinEncoder.reset();
+        spinEncoder.reset();
     }
 
     public void resetSpinEncoder() {
-        spinEncoder.setPosition(0);
-        // spinEncoder.reset();
+        spinEncoder.reset();
     }
 
     public void setDesiredState(SwerveModuleState state) {
-        state = SwerveModuleState.optimize(state, new Rotation2d(spinEncoder.getPosition()));
-        // state = SwerveModuleState.optimize(state, new Rotation2d(spinEncoder.getDistance()));
+        state = SwerveModuleState.optimize(state, new Rotation2d(spinEncoder.getDistance()));
 		final double powerOutput = powerPid.calculate(powerEncoder.getVelocity(), state.speedMetersPerSecond);
 		final double powerFf = powerFeedforward.calculate(state.speedMetersPerSecond);
-		final double spinOutput = spinPid.calculate(spinEncoder.getPosition(), state.angle.getRadians());
-		// final double spinOutput = spinPid.calculate(spinEncoder.getDistance(), state.angle.getRadians());
+		final double spinOutput = spinPid.calculate(spinEncoder.getDistance(), state.angle.getRadians());
 		final double spinFf = spinFeedforward.calculate(spinPid.getSetpoint().velocity);
 
         // powerMotor.set(powerOutput + powerFf);
