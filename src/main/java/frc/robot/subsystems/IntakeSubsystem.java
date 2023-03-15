@@ -116,7 +116,9 @@ public class IntakeSubsystem extends SubsystemBase {
 	public Arm arm;
 	public Claw claw;
 
-    // pid controllers + feedforward
+    //TODO: fix pid
+	
+	// pid controllers + feedforward
     private final ProfiledPIDController elbowPid = new ProfiledPIDController(
 		kpElbow, kiElbow, kdElbow,
 		new TrapezoidProfile.Constraints(
