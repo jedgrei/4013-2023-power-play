@@ -4,20 +4,85 @@
 
 package frc.robot.subsystems;
 
-import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 
-public class Arm extends SubsystemBase {
+public class IntakeSubsystem extends SubsystemBase {
+	public class Arm {
+		CANSparkMax armL1, armL2, armR1, armR2, elbowL, elbowR;
+		RelativeEncoder armEncoder, elbowEncoder;
+
+		public Arm(int armL1Port, int armL2Port, int armR1Port, int armR2Port, int elbowLPort, int elbowRPort) {
+			armL1 = new CANSparkMax(armL1Port, MotorType.kBrushed);
+			armL2 = new CANSparkMax(armL2Port, MotorType.kBrushed);
+			armR1 = new CANSparkMax(armR1Port, MotorType.kBrushed);
+			armR2 = new CANSparkMax(armR2Port, MotorType.kBrushed);
+
+			armL2.setInverted(true);
+			armR1.setInverted(true);
+
+			elbowL = new CANSparkMax(elbowRPort, MotorType.kBrushless);
+			elbowR = new CANSparkMax(elbowRPort, MotorType.kBrushless);
+
+			// arm ports:   16,9,3,2
+			// elbow ports: 6,5
+
+			armEncoder = armL1.getEncoder();
+			elbowEncoder = elbowL.getEncoder();
+
+			armEncoder.setPositionConversionFactor(1 / 35.5);
+			elbowEncoder.setPositionConversionFactor(1 / 2.5);
+		}
+
+		public void rotate(double speed) {
+			armL1.set(speed);
+			armL2.set(speed);
+			armR1.set(speed);
+			armR2.set(speed);
+		}
+
+		public void stop() {
+			armL1.set(0);
+			armL2.set(0);
+			armR1.set(0);
+			armR2.set(0);
+		}
+	}
+
+	public class Claw {
+		CANSparkMax clawMotor;
+
+		public Claw(int clawMotorPort) {
+			clawMotor = new CANSparkMax(clawMotorPort, MotorType.kBrushless);
+		}
+
+		public void grab() {
+			clawMotor.set(0.5);
+		}
+
+		public void shoot() {
+			clawMotor.set(-1);
+			new WaitCommand(2);
+		}
+
+		public void release() {
+			clawMotor.set(-0.15);
+			new WaitCommand(2);
+		}
+		
+		public void stop() {
+			clawMotor.set(0);
+		}
+	}
+
+	
 	// ------------------------------ CONSTANTS ------------------------------ //
 	// speeds
 	public static final double maxAngularVelocityElbow = Math.PI / 8;
@@ -34,7 +99,8 @@ public class Arm extends SubsystemBase {
 	public static final int elbow3Port = 2;
     // public static final int elbowEncoderPort = 0;
 
-	public static final int wristPort = 0;
+	public static final int wrist0Port = 6;
+	public static final int wrist1Port = 5;
     // public static final int wristEncoderPort = 0;
 
     public static final int handPort = 0;
@@ -46,9 +112,9 @@ public class Arm extends SubsystemBase {
 	private static final double ksWrist = 1, kgWrist = 0, kvWrist = 0.5;
 
 	// ------------------------------- MEMBERS ------------------------------- //
-	// motors + encoders
-    CANSparkMax elbow0Motor, elbow1Motor, elbow2Motor, elbow3Motor, wristMotor, handMotor;
-	AbsoluteEncoder elbowEncoder, wristEncoder;
+
+	public Arm arm;
+	public Claw claw;
 
     // pid controllers + feedforward
     private final ProfiledPIDController elbowPid = new ProfiledPIDController(
@@ -57,6 +123,7 @@ public class Arm extends SubsystemBase {
 			maxAngularVelocityElbow, maxAngularAccelerationElbow
 		)
 	);
+
     private final ProfiledPIDController wristPid = new ProfiledPIDController(
 		kpWrist, kiWrist, kdWrist,
 		new TrapezoidProfile.Constraints(
@@ -68,20 +135,9 @@ public class Arm extends SubsystemBase {
 	private final ArmFeedforward wristFeedforward = new ArmFeedforward(ksWrist, kgWrist, kvWrist);
 
 	// ----------------------------- CONSTRUCTOR ----------------------------- //
-	public Arm() {
-        elbow0Motor = new CANSparkMax(elbow0Port, MotorType.kBrushed);
-        elbow1Motor = new CANSparkMax(elbow1Port, MotorType.kBrushed);
-        elbow2Motor = new CANSparkMax(elbow2Port, MotorType.kBrushed);
-        elbow3Motor = new CANSparkMax(elbow3Port, MotorType.kBrushed);
-        // wristMotor = new CANSparkMax(wristPort, MotorType.kBrushless);
-	
-        // elbowEncoder = new DutyCycleEncoder(elbowEncoderPort);
-        // wristEncoder = new DutyCycleEncoder(wristEncoderPort);
-        elbowEncoder = elbow0Motor.getAbsoluteEncoder(Type.kDutyCycle);
-        // wristEncoder = wristMotor.getAbsoluteEncoder(Type.kDutyCycle);
-
-        elbowEncoder.setPositionConversionFactor(1/35.5);
-        // wristEncoder.setPositionConversionFactor(1/35.5);
+	public IntakeSubsystem() {
+        arm = new Arm(elbow0Port, elbow1Port, elbow2Port, elbow3Port, wrist0Port, wrist1Port);
+		claw = new Claw(handPort);
     }
 
 	// ------------------------------- PERIODIC ------------------------------ //
@@ -89,31 +145,4 @@ public class Arm extends SubsystemBase {
 	public void periodic() {
 		
 	}
-
-	// ------------------------------- METHODS ------------------------------- //
-    public void drive(double eSpeed, double wSpeed) {
-        // double elbowOutput = elbowPid.calculate(elbowEncoder.getPosition(), eSpeed);
-		// double elbowFf = elbowFeedforward.calculate(elbowEncoder.getDistance(), eSpeed);
-        // double wristOutput = wristPid.calculate(wristEncoder.getDistance(), wSpeed);
-		// double wristFf = wristFeedforward.calculate(wristEncoder.getDistance(), wSpeed);
-    
-		// elbowLeftMotor.setVoltage(elbowOutput + elbowFf);
-		// elbowRightMotor.setVoltage(elbowOutput + elbowFf);
-		// wristMotor.setVoltage(wristOutput + wristFf);
-        double elbowOutput = eSpeed * 100;
-        elbow0Motor.set(elbowOutput);
-        elbow1Motor.set(-elbowOutput);
-        elbow2Motor.set(elbowOutput);
-        elbow3Motor.set(-elbowOutput);
-        SmartDashboard.putNumber("elbow", elbowOutput);
-        // wristMotor.set(wristOutput);
-	}
-
-    public void setHandSpeed(double speed) {
-        handMotor.set(speed);
-    }
-
-    public void stopHand() {
-        handMotor.set(0);
-    }
 }

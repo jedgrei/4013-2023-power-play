@@ -16,7 +16,7 @@ import edu.wpi.first.wpilibj.ADIS16448_IMU;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class SwerveDrive extends SubsystemBase {
+public class SwerveDriveSubsystem extends SubsystemBase {
 	// ------------------------------ CONSTANTS ------------------------------ //
 	// speeds
 	public static final double maxSpeed = 3.0;
@@ -75,7 +75,7 @@ public class SwerveDrive extends SubsystemBase {
 
 
 	// ----------------------------- CONSTRUCTOR ----------------------------- //
-	public SwerveDrive() {
+	public SwerveDriveSubsystem() {
 		imu.reset();
 	}
 

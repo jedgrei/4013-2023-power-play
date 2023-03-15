@@ -9,8 +9,8 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.subsystems.Arm;
-import frc.robot.subsystems.SwerveDrive;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.SwerveDriveSubsystem;
 
 
 /**
@@ -22,8 +22,8 @@ import frc.robot.subsystems.SwerveDrive;
 public class Robot extends TimedRobot {
 	// ------------------------------- MEMBERS ------------------------------- //
 	// subsystems
-	private final SwerveDrive swerve = new SwerveDrive();
-	private final Arm arm = new Arm();
+	private final SwerveDriveSubsystem swerve = new SwerveDriveSubsystem();
+	private final IntakeSubsystem intake = new IntakeSubsystem();
 
 	// controllers + joystick limiters
 	private final XboxController swerveController = new XboxController(1);
@@ -75,37 +75,50 @@ public class Robot extends TimedRobot {
 	public void teleopPeriodic() {
 		double speedModSwerve = (swerveController.getLeftTriggerAxis() > 0.5 ? 1 : (swerveController.getRightTriggerAxis() > 0.5 ? 0.3 : 0.7));
 		double speedModArm = (armController.getLeftTriggerAxis() > 0.5 ? 0.3 : (armController.getRightTriggerAxis() > 0.5 ? 0.1 : 0.2));
-		// joystickDrive(true);
-		// if(controller.getAButton()) {
-		// 	swerve.driveForward();
-		// }
-		// if(controller.getBButton()) {
-		// 	swerve.driveSpinToZero();
-		// }
-		// if(controller.getXButton()) {
-		// 	swerve.stop();
-		// }
+		
 		joystickDrive(false, speedModSwerve);
-		joystickArmDrive(speedModArm);
+
+		if (armController.getAButton()) {
+			intake.claw.grab();
+		}
+
+		if (armController.getBButton()) {
+			intake.claw.stop();
+		}
+
+		if (armController.getXButton()) {
+			intake.claw.release();
+		}
+
+		if (armController.getYButton()) {
+			intake.claw.shoot();
+		}
+
+		if (armController.getLeftBumper()) {
+			intake.arm.rotate(-0.3);
+		} else if (armController.getRightBumper()) {
+			intake.arm.rotate(0.3);
+		} else {
+			intake.arm.stop();
+		}
+
 		if(swerveController.getLeftBumper() && swerveController.getRightBumper() && swerveController.getXButton() && swerveController.getYButton() && swerveController.getBButton() && !swerveController.getAButton()) {
 			swerve.resetSpinEncoders();
 		}
 	}
 
 	public void joystickDrive(boolean fieldRelative, double speedMod) {
-		final double xSpeed = speedMod * -xSpeedLimiter.calculate(MathUtil.applyDeadband(swerveController.getLeftY(), 0.05)) * SwerveDrive.maxSpeed;
-		final double ySpeed = speedMod * -ySpeedLimiter.calculate(MathUtil.applyDeadband(swerveController.getLeftX(), 0.05)) * SwerveDrive.maxSpeed;
-		final double rotSpeed = speedMod * -rotSpeedLimiter.calculate(MathUtil.applyDeadband(swerveController.getRightX(), 0.05)) * SwerveDrive.maxAngularSpeed;
+		final double xSpeed = speedMod * -xSpeedLimiter.calculate(MathUtil.applyDeadband(swerveController.getLeftY(), 0.05)) * SwerveDriveSubsystem.maxSpeed;
+		final double ySpeed = speedMod * -ySpeedLimiter.calculate(MathUtil.applyDeadband(swerveController.getLeftX(), 0.05)) * SwerveDriveSubsystem.maxSpeed;
+		final double rotSpeed = speedMod * -rotSpeedLimiter.calculate(MathUtil.applyDeadband(swerveController.getRightX(), 0.05)) * SwerveDriveSubsystem.maxAngularSpeed;
 
 		swerve.drive(xSpeed, ySpeed, rotSpeed, fieldRelative);
 	}
 
 
 	public void joystickArmDrive(double speedMod) {
-		final double elbowSpeed = speedMod * -elbowSpeedLimiter.calculate(MathUtil.applyDeadband(armController.getLeftY(), 0.05)) * SwerveDrive.maxSpeed;
-		final double wristSpeed = speedMod * -wristSpeedLimiter.calculate(MathUtil.applyDeadband(armController.getRightY(), 0.05)) * SwerveDrive.maxSpeed;
-
-		arm.drive(elbowSpeed, wristSpeed);
+		final double elbowSpeed = speedMod * -elbowSpeedLimiter.calculate(MathUtil.applyDeadband(armController.getLeftY(), 0.05)) * SwerveDriveSubsystem.maxSpeed;
+		final double wristSpeed = speedMod * -wristSpeedLimiter.calculate(MathUtil.applyDeadband(armController.getRightY(), 0.05)) * SwerveDriveSubsystem.maxSpeed;
 	}
 	
 	// --------------------------------- TEST -------------------------------- //
