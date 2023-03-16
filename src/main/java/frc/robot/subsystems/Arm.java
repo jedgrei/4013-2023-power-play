@@ -26,6 +26,8 @@ public class Arm extends SubsystemBase {
 	public static final double maxAngularAccelerationElbow = Math.PI / 8;
 	public static final double maxAngularAccelerationWrist = Math.PI / 8;
     public static final double maxHandVelocity = 1;
+	public static final int elbowCurrentLimit = 25;
+	public static final int wristCurrentLimit = 35;
 
 	// motor/encoder ports
     // TODO: find arm ports
@@ -46,18 +48,32 @@ public class Arm extends SubsystemBase {
 	// ------------------------------- MEMBERS ------------------------------- //
 	// motors + encoders
     CANSparkMax elbow0Motor, elbow1Motor, elbow2Motor, elbow3Motor;
-	CANSparkMax wrist0Motor, wrist1Motor, handMotor;
+	CANSparkMax wrist1Motor, handMotor;
 	AbsoluteEncoder elbowEncoder;
 	RelativeEncoder wristEncoder;
 
+	boolean velocity;
+
     // pid controllers + feedforward
-    private final ProfiledPIDController elbowPid = new ProfiledPIDController(
+    private final ProfiledPIDController elbowPositionPid = new ProfiledPIDController(
 		kpElbow, kiElbow, kdElbow,
 		new TrapezoidProfile.Constraints(
 			maxAngularVelocityElbow, maxAngularAccelerationElbow
 		)
 	);
-    private final ProfiledPIDController wristPid = new ProfiledPIDController(
+    private final ProfiledPIDController wristPositionPid = new ProfiledPIDController(
+		kpWrist, kiWrist, kdWrist,
+		new TrapezoidProfile.Constraints(
+			maxAngularVelocityWrist, maxAngularAccelerationWrist
+		)
+	);
+    private final ProfiledPIDController elbowVelocityPid = new ProfiledPIDController(
+		kpElbow, kiElbow, kdElbow,
+		new TrapezoidProfile.Constraints(
+			maxAngularVelocityElbow, maxAngularAccelerationElbow
+		)
+	);
+    private final ProfiledPIDController wristVelocityPid = new ProfiledPIDController(
 		kpWrist, kiWrist, kdWrist,
 		new TrapezoidProfile.Constraints(
 			maxAngularVelocityWrist, maxAngularAccelerationWrist
@@ -73,66 +89,108 @@ public class Arm extends SubsystemBase {
         elbow1Motor = new CANSparkMax(elbow1Port, MotorType.kBrushed);
         elbow2Motor = new CANSparkMax(elbow2Port, MotorType.kBrushed);
         elbow3Motor = new CANSparkMax(elbow3Port, MotorType.kBrushed);
-        wrist0Motor = new CANSparkMax(wrist0Port, MotorType.kBrushless);
+        // wrist0Motor = new CANSparkMax(wrist0Port, MotorType.kBrushless);
         wrist1Motor = new CANSparkMax(wrist1Port, MotorType.kBrushless);
 		handMotor = new CANSparkMax(handPort, MotorType.kBrushless);
 	
+		elbow0Motor.setSmartCurrentLimit(elbowCurrentLimit);
+		elbow1Motor.setSmartCurrentLimit(elbowCurrentLimit);
+		elbow2Motor.setSmartCurrentLimit(elbowCurrentLimit);
+		elbow3Motor.setSmartCurrentLimit(elbowCurrentLimit);
+		wrist1Motor.setSmartCurrentLimit(wristCurrentLimit);
+
 		// elbow0Motor.setInverted(true);
 		// elbow2Motor.setInverted(true);
 		// wrist1Motor.setInverted(true);
 
         elbowEncoder = elbow0Motor.getAbsoluteEncoder(Type.kDutyCycle);
-		wristEncoder = wrist0Motor.getEncoder();
+		// elbowEncoder = elbow0Motor.getEncoder();
+		wristEncoder = wrist1Motor.getEncoder();
+		// wristEncoder = wrist0Motor.getEncoder();
         // wristEncoder = wristMotor.getAbsoluteEncoder(Type.kDutyCycle);
 
         // elbowEncoder.setPositionConversionFactor(1/35.5);
         // wristEncoder.setPositionConversionFactor(1/35.5);
         // wristEncoder.setPositionConversionFactor(1/35.5);
+		elbowEncoder.setPositionConversionFactor((2*Math.PI)/(42*48));
+		wristEncoder.setPositionConversionFactor((2*Math.PI)/(42*48));
+		elbowEncoder.setVelocityConversionFactor((2*Math.PI)/(42*48));
+		elbowEncoder.setVelocityConversionFactor((2*Math.PI)/(42*48));
+
+		targetElbowPosition = 0;
+		targetWristPosition = 0;
+		targetElbowVelocity = 0;
+		targetWristVelocity = 0;
+
+		velocity = false;
     }
 
 	// ------------------------------- PERIODIC ------------------------------ //
 	@Override
 	public void periodic() {
-		
+		updateControllers();
+		SmartDashboard.putNumber("elbow angle", elbowEncoder.getPosition());
+		SmartDashboard.putNumber("wrist angle", wristEncoder.getPosition());
+	
+		// if(targetElbowVelocity == 0 && targetWristVelocity == 0) {
+		// 	velocity = false;
+		// }
 	}
 
+	public void updateControllers() {
+		if (velocity) {
+			double elbowOutput = elbowVelocityPid.calculate(elbowEncoder.getPosition(), targetElbowVelocity);
+			double elbowFf = elbowFeedforward.calculate(elbowEncoder.getPosition(), targetElbowVelocity);
+        	double wristOutput = wristVelocityPid.calculate(wristEncoder.getPosition(), targetWristVelocity);
+			double wristFf = wristFeedforward.calculate(wristEncoder.getPosition(), targetWristVelocity);
+
+			// elbow0Motor.set(-elbowOutput - elbowFf);
+			// elbow1Motor.set(elbowOutput + elbowFf);
+			// elbow2Motor.set(elbowOutput + elbowFf);
+			// elbow3Motor.set(-elbowOutput - elbowFf);
+			// wrist1Motor.set(wristOutput + wristFf);
+			
+			elbow0Motor.setVoltage(-elbowOutput);
+			elbow1Motor.setVoltage(elbowOutput);
+			elbow2Motor.setVoltage(elbowOutput);
+			elbow3Motor.setVoltage(-elbowOutput);
+			wrist1Motor.setVoltage(wristOutput);
+
+			SmartDashboard.putNumber("elbow-v", elbowOutput);
+			SmartDashboard.putNumber("wrist-v", wristOutput);
+			SmartDashboard.putNumber("target-ev", targetElbowVelocity);
+			SmartDashboard.putNumber("target-wv", targetWristVelocity);
+		}
+		else {
+			double elbowOutput = elbowPositionPid.calculate(elbowEncoder.getPosition(), targetElbowVelocity);
+			double elbowFf = elbowFeedforward.calculate(elbowEncoder.getPosition(), targetElbowVelocity);
+        	double wristOutput = wristPositionPid.calculate(wristEncoder.getPosition(), targetWristVelocity);
+			double wristFf = wristFeedforward.calculate(wristEncoder.getPosition(), targetWristVelocity);
+		
+			elbow0Motor.setVoltage(-elbowOutput);
+			elbow1Motor.setVoltage(elbowOutput);
+			elbow2Motor.setVoltage(elbowOutput);
+			elbow3Motor.setVoltage(-elbowOutput);
+			wrist1Motor.setVoltage(wristOutput);
+			
+			SmartDashboard.putNumber("elbow-p", elbowOutput);
+			SmartDashboard.putNumber("wrist-p", wristOutput);
+			SmartDashboard.putNumber("target-ep", targetElbowPosition);
+			SmartDashboard.putNumber("target-wv", targetWristPosition);
+		}
+	}
+	
 	// ------------------------------- METHODS ------------------------------- //
     public void drive(double eSpeed, double wSpeed) {
-        // double elbowOutput = elbowPid.calculate(elbowEncoder.getVelocity(), eSpeed);
-		// double elbowFf = elbowFeedforward.calculate(elbowEncoder.getVelocity(), eSpeed);
-        // double wristOutput = wristPid.calculate(wristEncoder.getVelocity(), wSpeed);
-		// double wristFf = wristFeedforward.calculate(wristEncoder.getVelocity(), wSpeed);
-    
-		// elbowLeftMotor.setVoltage(elbowOutput + elbowFf);
-		// elbowRightMotor.setVoltage(elbowOutput + elbowFf);
-		// wristMotor.setVoltage(wristOutput + wristFf);
-        double elbowOutput = eSpeed * 3;
-        // double wristOutput = wSpeed * 3;
-		double wristOutput;
-		if(wSpeed != 0) wristOutput = 5/6;
-		else wristOutput = 0;
-        elbow0Motor.set(-elbowOutput);
-        elbow1Motor.set(elbowOutput);
-        elbow2Motor.set(elbowOutput);
-        elbow3Motor.set(-elbowOutput);
-        wrist0Motor.set(wristOutput * 6 / 5);
-        wrist1Motor.set(-wristOutput);
-        SmartDashboard.putNumber("elbow", elbowOutput);
-        SmartDashboard.putNumber("wrist", wristOutput);
+		velocity = true;
+		targetElbowVelocity = eSpeed;
+		targetWristVelocity = wSpeed;
 	}
 
 	public void driveToPosition(double ePosition, double wPosition) {
-        double elbowOutput = elbowPid.calculate(elbowEncoder.getPosition(), ePosition);
-		double elbowFf = elbowFeedforward.calculate(elbowEncoder.getPosition(), ePosition);
-        double wristOutput = wristPid.calculate(wristEncoder.getPosition(), wPosition);
-		double wristFf = wristFeedforward.calculate(wristEncoder.getPosition(), wPosition);
-
-        elbow0Motor.set(elbowOutput + elbowFf);
-        elbow1Motor.set(elbowOutput + elbowFf);
-        elbow2Motor.set(elbowOutput + elbowFf);
-        elbow3Motor.set(elbowOutput + elbowFf);
-        wrist0Motor.set(wristOutput + wristFf);
-        wrist1Motor.set(wristOutput + wristFf);
+		velocity = false;
+		targetElbowPosition = ePosition;
+		targetWristPosition = wPosition;
 	}
 
     public void setHandSpeed(double speed) {
@@ -142,7 +200,17 @@ public class Arm extends SubsystemBase {
     public void stopHand() {
         handMotor.set(0);
     }
-	
+
+	double targetElbowPosition;
+	double targetWristPosition;
+	double targetElbowVelocity;
+	double targetWristVelocity;
+
+	// double elbowOutput;
+	// double elbowFf;
+	// double wristOutput;
+	// double wristFf;
+
 	// ------------------------------- COMMANDS ------------------------------ //
 	public CommandBase setHandSpeedCommand(double speed) {
 		return this.runOnce(() -> handMotor.set(speed));

@@ -76,7 +76,7 @@ public class Robot extends TimedRobot {
 	@Override
 	public void teleopPeriodic() {
 		double speedModSwerve = (swerveController.getLeftTriggerAxis() > 0.5 ? 1 : (swerveController.getRightTriggerAxis() > 0.5 ? 0.3 : 0.7));
-		double speedModArm = (armController.getLeftTriggerAxis() > 0.5 ? 0.3 : (armController.getRightTriggerAxis() > 0.5 ? 0.1 : 0.2));
+		double speedModArm = (armController.getLeftTriggerAxis() > 0.5 ? 12 : (armController.getRightTriggerAxis() > 0.5 ? 6 : 9));
 		// joystickDrive(true);
 		// if(controller.getAButton()) {
 		// 	swerve.driveForward();

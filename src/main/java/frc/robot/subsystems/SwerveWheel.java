@@ -22,7 +22,8 @@ public class SwerveWheel {
     public static final double powerMotorReduction = (45.0 * 22) / powerMotorPinionTeeth * 15;
     private static final double powerPositionConversion = wheelDiam * Math.PI / powerMotorReduction;
     private static final double powerVelocityConversion = powerPositionConversion / 60;
-
+    private static final int spinCurrentLimit = 20;
+    private static final int powerCurrentLimit = 40;
     
 	// speeds + accelerations
 	private static final double maxAngularVelocity = Math.PI;
@@ -57,8 +58,13 @@ public class SwerveWheel {
         powerMotor = new CANSparkMax(powerPort, MotorType.kBrushless);
         spinMotor = new CANSparkMax(spinPort, MotorType.kBrushless);
 
+        powerMotor.setSmartCurrentLimit(powerCurrentLimit);
+        spinMotor.setSmartCurrentLimit(spinCurrentLimit);
+
         powerEncoder = powerMotor.getEncoder();
         spinEncoder = spinMotor.getEncoder();
+
+
         // spinEncoder = new DutyCycleEncoder(spinEncoderPort);
         // spinEncoderOffset = spinEncoderOffsetVal;
 
