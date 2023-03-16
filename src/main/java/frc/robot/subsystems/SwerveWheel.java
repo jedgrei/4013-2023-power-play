@@ -12,7 +12,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
 
 public class SwerveWheel {
 	// ------------------------------ CONSTANTS ------------------------------ //
@@ -100,10 +99,10 @@ public class SwerveWheel {
         state = SwerveModuleState.optimize(state, new Rotation2d(spinEncoder.getPosition()));
         // state = SwerveModuleState.optimize(state, new Rotation2d(spinEncoder.getDistance()));
 		final double powerOutput = powerPid.calculate(powerEncoder.getVelocity(), state.speedMetersPerSecond);
-		final double powerFf = powerFeedforward.calculate(state.speedMetersPerSecond);
+		// final double powerFf = powerFeedforward.calculate(state.speedMetersPerSecond);
 		final double spinOutput = spinPid.calculate(spinEncoder.getPosition(), state.angle.getRadians());
 		// final double spinOutput = spinPid.calculate(spinEncoder.getDistance(), state.angle.getRadians());
-		final double spinFf = spinFeedforward.calculate(spinPid.getSetpoint().velocity);
+		// final double spinFf = spinFeedforward.calculate(spinPid.getSetpoint().velocity);
 
         // powerMotor.set(powerOutput + powerFf);
         // spinMotor.set(spinOutput + spinFf);
