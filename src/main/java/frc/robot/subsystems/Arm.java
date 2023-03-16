@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
@@ -46,7 +47,8 @@ public class Arm extends SubsystemBase {
 	// motors + encoders
     CANSparkMax elbow0Motor, elbow1Motor, elbow2Motor, elbow3Motor;
 	CANSparkMax wrist0Motor, wrist1Motor, handMotor;
-	AbsoluteEncoder elbowEncoder, wristEncoder;
+	AbsoluteEncoder elbowEncoder;
+	RelativeEncoder wristEncoder;
 
     // pid controllers + feedforward
     private final ProfiledPIDController elbowPid = new ProfiledPIDController(
@@ -75,12 +77,12 @@ public class Arm extends SubsystemBase {
         wrist1Motor = new CANSparkMax(wrist1Port, MotorType.kBrushless);
 		handMotor = new CANSparkMax(handPort, MotorType.kBrushless);
 	
-        // elbowEncoder = new DutyCycleEncoder(elbowEncoderPort);
-        // wristEncoder = new DutyCycleEncoder(wristEncoderPort);
-        elbowEncoder = elbow0Motor.getAbsoluteEncoder(Type.kDutyCycle);
+        elbowEncoder = elbow3Motor.getAbsoluteEncoder(Type.kDutyCycle);
+		wristEncoder = wrist0Motor.getEncoder();
         // wristEncoder = wristMotor.getAbsoluteEncoder(Type.kDutyCycle);
 
         elbowEncoder.setPositionConversionFactor(1/35.5);
+        wristEncoder.setPositionConversionFactor(1/35.5);
         // wristEncoder.setPositionConversionFactor(1/35.5);
     }
 
@@ -94,7 +96,7 @@ public class Arm extends SubsystemBase {
     public void drive(double eSpeed, double wSpeed) {
         // double elbowOutput = elbowPid.calculate(elbowEncoder.getPosition(), eSpeed);
 		// double elbowFf = elbowFeedforward.calculate(elbowEncoder.getDistance(), eSpeed);
-        // double wristOutput = wristPid.calculate(wristEncoder.getDistance(), wSpeed);
+        // double wristOutput = wristPid.calculate(wristEncoder.getPosition(), wSpeed);
 		// double wristFf = wristFeedforward.calculate(wristEncoder.getDistance(), wSpeed);
     
 		// elbowLeftMotor.setVoltage(elbowOutput + elbowFf);

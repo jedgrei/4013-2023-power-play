@@ -24,13 +24,14 @@ public class SwerveWheel {
     private static final double powerPositionConversion = wheelDiam * Math.PI / powerMotorReduction;
     private static final double powerVelocityConversion = powerPositionConversion / 60;
 
+    
 	// speeds + accelerations
 	private static final double maxAngularVelocity = Math.PI;
 	private static final double maxAngularAcceleration = 2 * Math.PI;
 
 	// controller constants TODO: tune nums
 	private static final double kpPower = 0.5, kiPower = 0, kdPower = 0;
-	private static final double kpSpin = 0.7, kiSpin = 0.1, kdSpin = 0.0;
+	private static final double kpSpin = 0.9, kiSpin = 0.1, kdSpin = 0.0;
 	private static final double ksPower = 1, kvPower = 3;
 	private static final double ksSpin = 1, kvSpin = 0.5;
 
