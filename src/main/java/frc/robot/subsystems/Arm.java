@@ -32,12 +32,9 @@ public class Arm extends SubsystemBase {
 	public static final int elbow1Port = 9;
 	public static final int elbow2Port = 3;
 	public static final int elbow3Port = 2;
-    // public static final int elbowEncoderPort = 0;
-
-	public static final int wristPort = 0;
-    // public static final int wristEncoderPort = 0;
-
-    public static final int handPort = 0;
+	public static final int wrist0Port = 6;
+	public static final int wrist1Port = 5;
+    public static final int handPort = 17;
 
     // contoller constants TODO: tune nums
     private static final double kpElbow = 1, kiElbow = 0, kdElbow = 0;
@@ -47,7 +44,8 @@ public class Arm extends SubsystemBase {
 
 	// ------------------------------- MEMBERS ------------------------------- //
 	// motors + encoders
-    CANSparkMax elbow0Motor, elbow1Motor, elbow2Motor, elbow3Motor, wristMotor, handMotor;
+    CANSparkMax elbow0Motor, elbow1Motor, elbow2Motor, elbow3Motor;
+	CANSparkMax wrist0Motor, wrist1Motor, handMotor;
 	AbsoluteEncoder elbowEncoder, wristEncoder;
 
     // pid controllers + feedforward
@@ -73,7 +71,9 @@ public class Arm extends SubsystemBase {
         elbow1Motor = new CANSparkMax(elbow1Port, MotorType.kBrushed);
         elbow2Motor = new CANSparkMax(elbow2Port, MotorType.kBrushed);
         elbow3Motor = new CANSparkMax(elbow3Port, MotorType.kBrushed);
-        // wristMotor = new CANSparkMax(wristPort, MotorType.kBrushless);
+        wrist0Motor = new CANSparkMax(wrist0Port, MotorType.kBrushless);
+        wrist1Motor = new CANSparkMax(wrist1Port, MotorType.kBrushless);
+		handMotor = new CANSparkMax(handPort, MotorType.kBrushless);
 	
         // elbowEncoder = new DutyCycleEncoder(elbowEncoderPort);
         // wristEncoder = new DutyCycleEncoder(wristEncoderPort);
@@ -100,13 +100,16 @@ public class Arm extends SubsystemBase {
 		// elbowLeftMotor.setVoltage(elbowOutput + elbowFf);
 		// elbowRightMotor.setVoltage(elbowOutput + elbowFf);
 		// wristMotor.setVoltage(wristOutput + wristFf);
-        double elbowOutput = eSpeed * 100;
+        double elbowOutput = eSpeed * 3;
+        double wristOutput = wSpeed * 3;
         elbow0Motor.set(elbowOutput);
         elbow1Motor.set(-elbowOutput);
-        elbow2Motor.set(elbowOutput);
-        elbow3Motor.set(-elbowOutput);
+        elbow2Motor.set(-elbowOutput);
+        elbow3Motor.set(elbowOutput);
+        wrist0Motor.set(wristOutput);
+        wrist1Motor.set(-wristOutput);
         SmartDashboard.putNumber("elbow", elbowOutput);
-        // wristMotor.set(wristOutput);
+        SmartDashboard.putNumber("wrist", wristOutput);
 	}
 
     public void setHandSpeed(double speed) {

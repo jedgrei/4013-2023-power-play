@@ -32,7 +32,7 @@ public class SwerveDrive extends SubsystemBase {
 	public static final int frSpinEncPort = 0;
 
 	public static final int rrPowerPort = 11;
-	public static final int rrSpinPort = 5;
+	public static final int rrSpinPort = 19;
 	public static final int rrSpinEncPort = 2;
 
 	public static final int rlPowerPort = 12;
@@ -54,10 +54,10 @@ public class SwerveDrive extends SubsystemBase {
 	);
 	// ------------------------------- MEMBERS ------------------------------- //
 	// wheel modules
-	SwerveWheel frontLeft = new SwerveWheel(flPowerPort, flSpinPort, flSpinEncPort, 0);
 	SwerveWheel frontRight = new SwerveWheel(frPowerPort, frSpinPort, frSpinEncPort, Math.PI/2);
 	SwerveWheel rearRight = new SwerveWheel(rrPowerPort, rrSpinPort, rrSpinEncPort, Math.PI);
 	SwerveWheel rearLeft = new SwerveWheel(rlPowerPort, rlSpinPort, rlSpinEncPort, 3*Math.PI/2);
+	SwerveWheel frontLeft = new SwerveWheel(flPowerPort, flSpinPort, flSpinEncPort, 0);
 
 	// imu
     ADIS16448_IMU imu = new ADIS16448_IMU();
@@ -112,16 +112,6 @@ public class SwerveDrive extends SubsystemBase {
 		frontRight.setDesiredState(states[1]);
 		rearRight.setDesiredState(states[2]);
 		rearLeft.setDesiredState(states[3]);
-		// SmartDashboard.putString("target",
-		// 	Double.toString(states[0].speedMetersPerSecond) + "/" +
-		// 	Double.toString(states[1].speedMetersPerSecond) + "/" +
-		// 	Double.toString(states[2].speedMetersPerSecond) + "/" +
-		// 	Double.toString(states[3].speedMetersPerSecond) + "    " +
-		// 	Double.toString(states[0].angle.getDegrees()) + "/" +
-		// 	Double.toString(states[1].angle.getDegrees()) + "/" +
-		// 	Double.toString(states[2].angle.getDegrees()) + "/" +
-		// 	Double.toString(states[3].angle.getDegrees())
-		// );
 
 		SmartDashboard.putNumber("tflp", states[0].speedMetersPerSecond);
 		SmartDashboard.putNumber("tfrp", states[1].speedMetersPerSecond);
@@ -140,17 +130,6 @@ public class SwerveDrive extends SubsystemBase {
 		SmartDashboard.putNumber("afrs", frontRight.getState().angle.getDegrees());
 		SmartDashboard.putNumber("arrs", rearRight.getState().angle.getDegrees());
 		SmartDashboard.putNumber("arls", rearLeft.getState().angle.getDegrees());
-
-		// SmartDashboard.putString("actual",
-		// 	frontLeft.getState().speedMetersPerSecond + "/" +
-		// 	frontRight.getState().speedMetersPerSecond + "/" +
-		// 	rearRight.getState().speedMetersPerSecond + "/" +
-		// 	rearLeft.getState().speedMetersPerSecond + "    " +
-		// 	frontLeft.getState().angle.getDegrees() + "/" +
-		// 	frontRight.getState().angle.getDegrees() + "/" +
-		// 	rearRight.getState().angle.getDegrees() + "/" +
-		// 	rearLeft.getState().angle.getDegrees()
-		// );
 	}
 
 	public void drive(SwerveModuleState[] states) {

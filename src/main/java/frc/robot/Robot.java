@@ -71,6 +71,8 @@ public class Robot extends TimedRobot {
 	@Override
 	public void teleopInit() {}
 
+	private boolean holding;
+
 	@Override
 	public void teleopPeriodic() {
 		double speedModSwerve = (swerveController.getLeftTriggerAxis() > 0.5 ? 1 : (swerveController.getRightTriggerAxis() > 0.5 ? 0.3 : 0.7));
@@ -90,6 +92,22 @@ public class Robot extends TimedRobot {
 		if(swerveController.getLeftBumper() && swerveController.getRightBumper() && swerveController.getXButton() && swerveController.getYButton() && swerveController.getBButton() && !swerveController.getAButton()) {
 			swerve.resetSpinEncoders();
 		}
+		if(armController.getLeftBumper()) {
+			arm.setHandSpeed(-1);
+			holding = true;
+		}
+		else if(armController.getRightBumper()) {
+			holding = false;
+			arm.setHandSpeed(1);
+		}
+		else {
+			if(holding) {
+				arm.setHandSpeed(-0.2);
+			}
+			else {
+				arm.stopHand();
+			}
+		}
 	}
 
 	public void joystickDrive(boolean fieldRelative, double speedMod) {
@@ -102,8 +120,8 @@ public class Robot extends TimedRobot {
 
 
 	public void joystickArmDrive(double speedMod) {
-		final double elbowSpeed = speedMod * -elbowSpeedLimiter.calculate(MathUtil.applyDeadband(armController.getLeftY(), 0.05)) * SwerveDrive.maxSpeed;
-		final double wristSpeed = speedMod * -wristSpeedLimiter.calculate(MathUtil.applyDeadband(armController.getRightY(), 0.05)) * SwerveDrive.maxSpeed;
+		final double elbowSpeed = speedMod * -elbowSpeedLimiter.calculate(MathUtil.applyDeadband(armController.getLeftY(), 0.05));
+		final double wristSpeed = speedMod * -wristSpeedLimiter.calculate(MathUtil.applyDeadband(armController.getRightY(), 0.05));
 
 		arm.drive(elbowSpeed, wristSpeed);
 	}
