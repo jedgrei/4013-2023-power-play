@@ -14,6 +14,8 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Arm extends SubsystemBase {
@@ -75,12 +77,16 @@ public class Arm extends SubsystemBase {
         wrist1Motor = new CANSparkMax(wrist1Port, MotorType.kBrushless);
 		handMotor = new CANSparkMax(handPort, MotorType.kBrushless);
 	
-        elbowEncoder = elbow3Motor.getAbsoluteEncoder(Type.kDutyCycle);
+		// elbow0Motor.setInverted(true);
+		// elbow2Motor.setInverted(true);
+		// wrist1Motor.setInverted(true);
+
+        elbowEncoder = elbow0Motor.getAbsoluteEncoder(Type.kDutyCycle);
 		wristEncoder = wrist0Motor.getEncoder();
         // wristEncoder = wristMotor.getAbsoluteEncoder(Type.kDutyCycle);
 
-        elbowEncoder.setPositionConversionFactor(1/35.5);
-        wristEncoder.setPositionConversionFactor(1/35.5);
+        // elbowEncoder.setPositionConversionFactor(1/35.5);
+        // wristEncoder.setPositionConversionFactor(1/35.5);
         // wristEncoder.setPositionConversionFactor(1/35.5);
     }
 
@@ -92,24 +98,41 @@ public class Arm extends SubsystemBase {
 
 	// ------------------------------- METHODS ------------------------------- //
     public void drive(double eSpeed, double wSpeed) {
-        // double elbowOutput = elbowPid.calculate(elbowEncoder.getPosition(), eSpeed);
-		// double elbowFf = elbowFeedforward.calculate(elbowEncoder.getDistance(), eSpeed);
-        // double wristOutput = wristPid.calculate(wristEncoder.getPosition(), wSpeed);
-		// double wristFf = wristFeedforward.calculate(wristEncoder.getDistance(), wSpeed);
+        // double elbowOutput = elbowPid.calculate(elbowEncoder.getVelocity(), eSpeed);
+		// double elbowFf = elbowFeedforward.calculate(elbowEncoder.getVelocity(), eSpeed);
+        // double wristOutput = wristPid.calculate(wristEncoder.getVelocity(), wSpeed);
+		// double wristFf = wristFeedforward.calculate(wristEncoder.getVelocity(), wSpeed);
     
 		// elbowLeftMotor.setVoltage(elbowOutput + elbowFf);
 		// elbowRightMotor.setVoltage(elbowOutput + elbowFf);
 		// wristMotor.setVoltage(wristOutput + wristFf);
         double elbowOutput = eSpeed * 3;
-        double wristOutput = wSpeed * 3;
-        elbow0Motor.set(elbowOutput);
-        elbow1Motor.set(-elbowOutput);
-        elbow2Motor.set(-elbowOutput);
-        elbow3Motor.set(elbowOutput);
-        wrist0Motor.set(wristOutput);
+        // double wristOutput = wSpeed * 3;
+		double wristOutput;
+		if(wSpeed != 0) wristOutput = 5/6;
+		else wristOutput = 0;
+        elbow0Motor.set(-elbowOutput);
+        elbow1Motor.set(elbowOutput);
+        elbow2Motor.set(elbowOutput);
+        elbow3Motor.set(-elbowOutput);
+        wrist0Motor.set(wristOutput * 6 / 5);
         wrist1Motor.set(-wristOutput);
         SmartDashboard.putNumber("elbow", elbowOutput);
         SmartDashboard.putNumber("wrist", wristOutput);
+	}
+
+	public void driveToPosition(double ePosition, double wPosition) {
+        double elbowOutput = elbowPid.calculate(elbowEncoder.getPosition(), ePosition);
+		double elbowFf = elbowFeedforward.calculate(elbowEncoder.getPosition(), ePosition);
+        double wristOutput = wristPid.calculate(wristEncoder.getPosition(), wPosition);
+		double wristFf = wristFeedforward.calculate(wristEncoder.getPosition(), wPosition);
+
+        elbow0Motor.set(elbowOutput + elbowFf);
+        elbow1Motor.set(elbowOutput + elbowFf);
+        elbow2Motor.set(elbowOutput + elbowFf);
+        elbow3Motor.set(elbowOutput + elbowFf);
+        wrist0Motor.set(wristOutput + wristFf);
+        wrist1Motor.set(wristOutput + wristFf);
 	}
 
     public void setHandSpeed(double speed) {
@@ -119,4 +142,13 @@ public class Arm extends SubsystemBase {
     public void stopHand() {
         handMotor.set(0);
     }
+	
+	// ------------------------------- COMMANDS ------------------------------ //
+	public CommandBase setHandSpeedCommand(double speed) {
+		return this.runOnce(() -> handMotor.set(speed));
+	}
+
+	public CommandBase driveArmCommand(double eSpeed, double wSpeed) {
+		return this.run(() -> drive(eSpeed, wSpeed));
+	}
 }

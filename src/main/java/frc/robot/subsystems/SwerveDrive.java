@@ -210,4 +210,10 @@ public class SwerveDrive extends SubsystemBase {
 		rearRight.resetSpinEncoder();
 		rearLeft.resetSpinEncoder();
 	}
+
+	// auto
+
+	public void autoTranslate(double forward, double strafe) {
+		
+	}
 }

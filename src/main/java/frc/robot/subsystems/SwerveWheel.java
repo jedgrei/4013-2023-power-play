@@ -114,4 +114,7 @@ public class SwerveWheel {
         powerMotor.set(0);
         spinMotor.set(0);
     }
+
+	// --------------------------------- AUTO -------------------------------- //
+
 }
