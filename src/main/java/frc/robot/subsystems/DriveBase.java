@@ -14,21 +14,23 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.ADIS16448_IMU;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DriveBase extends SubsystemBase {
 	// ------------------------------ CONSTANTS ------------------------------ //
 	// speeds
-	public static final double forwardSpeed = 3.0;
-	public static final double rotSpeed = 3.0;
-	public static final double forwardSpeedFast = 5.0;
-	public static final double rotSpeedFast = 5.0;
-	public static final double forwardSpeedSlow = 1.0;
-	public static final double rotSpeedSlow = 1.0;
+	public static final double forwardSpeed = 6.0;
+	public static final double rotSpeed = 6.0;
+	public static final double forwardSpeedFast = 12.0;
+	public static final double rotSpeedFast = 12.0;
+	public static final double forwardSpeedSlow = 3.0;
+	public static final double rotSpeedSlow = 3.0;
 
 	public static final double maxSpeed = 5.0;
 	public static final double maxAngularSpeed = Math.PI;
@@ -73,10 +75,10 @@ public class DriveBase extends SubsystemBase {
 		right0Motor.setSmartCurrentLimit(40);
 		right1Motor.setSmartCurrentLimit(40);
 
-		// left0Motor.setIdleMode(IdleMode.kCoast);
-		// left1Motor.setIdleMode(IdleMode.kCoast);
-		// right0Motor.setIdleMode(IdleMode.kCoast);
-		// right1Motor.setIdleMode(IdleMode.kCoast);
+		left0Motor.setIdleMode(IdleMode.kCoast);
+		left1Motor.setIdleMode(IdleMode.kCoast);
+		right0Motor.setIdleMode(IdleMode.kCoast);
+		right1Motor.setIdleMode(IdleMode.kCoast);
 	}
 
 	// ------------------------------- PERIODIC ------------------------------ //
@@ -93,26 +95,32 @@ public class DriveBase extends SubsystemBase {
 
 	public void drive(double forSpeed, double rotSpeed) {
 		// diffDrive.arcadeDrive(forSpeed, rotSpeed, false);
-		left0Motor.set(forSpeed + rotSpeed);
-		left1Motor.set(forSpeed + rotSpeed);
-		right0Motor.set(-forSpeed + rotSpeed);
-		right1Motor.set(-forSpeed + rotSpeed);
+		left0Motor.setVoltage(forSpeed + rotSpeed);
+		left1Motor.setVoltage(forSpeed + rotSpeed);
+		right0Motor.setVoltage(-forSpeed + rotSpeed);
+		right1Motor.setVoltage(-forSpeed + rotSpeed);
 		SmartDashboard.putNumber("forspeed", forSpeed);
 		SmartDashboard.putNumber("rotspeed", rotSpeed);
 		SmartDashboard.putNumber("leftspeed", forSpeed + rotSpeed);
 		SmartDashboard.putNumber("rightspeed", forSpeed - rotSpeed);
 	}
-
-	public void driveToPosition(double leftPos, double rightPos) {
-		
-	}
-
-	public void updatePid() {
-
-	}
-
+	
 	// ------------------------------- COMMANDS ------------------------------ //
-	// public CommandBase driveToPositionCommand(double leftPos, double rightPos) {
-		
-	// }
+	public CommandBase driveForward(double speed) {
+		return runOnce(() -> {
+			left0Motor.set(speed);
+			left1Motor.set(speed);
+			right0Motor.set(speed);
+			right1Motor.set(speed);
+		});
+	}
+
+	public CommandBase stop() {
+		return runOnce(() -> {
+			left0Motor.set(0);
+			left1Motor.set(0);
+			right0Motor.set(0);
+			right1Motor.set(0);
+		});
+	}
 }

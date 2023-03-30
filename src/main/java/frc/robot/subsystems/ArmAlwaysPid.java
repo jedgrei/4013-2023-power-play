@@ -19,12 +19,12 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ArmAlwaysPid extends SubsystemBase {
-	public static final double elbowSpeed = 3.0;
-	public static final double wristSpeed = 9.0;
-	public static final double elbowSpeedFast = 5.0;
-	public static final double wristSpeedFast = 12.0;
-	public static final double elbowSpeedSlow = 1.0;
-	public static final double wristSpeedSlow = 6.0;
+	public static final double elbowSpeed = 0.5;
+	public static final double wristSpeed = 0.3;
+	public static final double elbowSpeedFast = 1.0;
+	public static final double wristSpeedFast = 0.5;
+	public static final double elbowSpeedSlow = 0.1;
+	public static final double wristSpeedSlow = 0.1;
 	// ------------------------------ CONSTANTS ------------------------------ //
 	// speeds
 	public static final double maxAngularVelocityElbow = 3;
@@ -43,8 +43,8 @@ public class ArmAlwaysPid extends SubsystemBase {
     public static final int handPort = 17;
 
     // contoller constants TODO: tune nums
-    private static final double kpElbow = 1, kiElbow = 0, kdElbow = 0;
-	private static final double kpWrist = 0.4, kiWrist = 0, kdWrist = 0;
+    private static final double kpElbow = 0.8, kiElbow = 0, kdElbow = 0;
+	private static final double kpWrist = 0.5, kiWrist = 0, kdWrist = 0;
 	private static final double ksElbow = 1, kgElbow = 0, kvElbow = 0.5;
 	private static final double ksWrist = 1, kgWrist = 0, kvWrist = 0.5;
 
@@ -120,7 +120,7 @@ public class ArmAlwaysPid extends SubsystemBase {
 	// ------------------------------- PERIODIC ------------------------------ //
 	@Override
 	public void periodic() {
-		updateControllers();
+		// updateControllers();
 		SmartDashboard.putNumber("elbow angle", elbowEncoder.getPosition());
 		SmartDashboard.putNumber("wrist angle", wristEncoder.getPosition());
 	}
@@ -130,37 +130,36 @@ public class ArmAlwaysPid extends SubsystemBase {
 	double targetElbowVelocity;
 	double targetWristVelocity;
 	
-	public void updateControllers() {
-		if (velocity) {
-			double elbowOutput = elbowVelocityPid.calculate(elbowEncoder.getVelocity(), targetElbowVelocity);
-			// double elbowFf = elbowFeedforward.calculate(elbowEncoder.getPosition(), targetElbowVelocity);
-        	double wristOutput = wristVelocityPid.calculate(wristEncoder.getVelocity(), targetWristVelocity);
-			// double wristFf = wristFeedforward.calculate(wristEncoder.getPosition(), targetWristVelocity);
-			
-			elbow0Motor.setVoltage(elbowOutput);
-			elbow1Motor.setVoltage(elbowOutput);
-			wristMotor.setVoltage(wristOutput);
-
-			SmartDashboard.putNumber("elbow-v", elbowOutput);
-			SmartDashboard.putNumber("wrist-v", wristOutput);
-			SmartDashboard.putNumber("target-ev", targetElbowVelocity);
-			SmartDashboard.putNumber("target-wv", targetWristVelocity);
-		}
-		else {
-			double elbowOutput = elbowPositionPid.calculate(elbowEncoder.getPosition(), targetElbowVelocity);
-			// double elbowFf = elbowFeedforward.calculate(elbowEncoder.getPosition(), targetElbowVelocity);
-        	double wristOutput = wristPositionPid.calculate(wristEncoder.getPosition(), targetWristVelocity);
-			// double wristFf = wristFeedforward.calculate(wristEncoder.getPosition(), targetWristVelocity);
+	public void updatePositionController() {
+		double elbowOutput = elbowPositionPid.calculate(elbowEncoder.getPosition(), targetElbowPosition);
+		// double elbowFf = elbowFeedforward.calculate(elbowEncoder.getPosition(), targetElbowVelocity);
+		double wristOutput = wristPositionPid.calculate(wristEncoder.getPosition(), targetWristPosition);
+		// double wristFf = wristFeedforward.calculate(wristEncoder.getPosition(), targetWristVelocity);
+	
+		elbow0Motor.setVoltage(elbowOutput);
+		elbow1Motor.setVoltage(elbowOutput);
+		wristMotor.setVoltage(wristOutput);
 		
-			elbow0Motor.setVoltage(elbowOutput);
-			elbow1Motor.setVoltage(elbowOutput);
-			wristMotor.setVoltage(wristOutput);
-			
-			SmartDashboard.putNumber("elbow-p", elbowOutput);
-			SmartDashboard.putNumber("wrist-p", wristOutput);
-			SmartDashboard.putNumber("target-ep", targetElbowPosition);
-			SmartDashboard.putNumber("target-wv", targetWristPosition);
-		}
+		SmartDashboard.putNumber("elbow-p", elbowOutput);
+		SmartDashboard.putNumber("wrist-p", wristOutput);
+		SmartDashboard.putNumber("target-ep", targetElbowPosition);
+		SmartDashboard.putNumber("target-wv", targetWristPosition);
+	}
+	
+	public void updateVelocityController() {
+		double elbowOutput = elbowVelocityPid.calculate(elbowEncoder.getVelocity(), targetElbowVelocity);
+		// double elbowFf = elbowFeedforward.calculate(elbowEncoder.getPosition(), targetElbowVelocity);
+		double wristOutput = wristVelocityPid.calculate(wristEncoder.getVelocity(), targetWristVelocity);
+		// double wristFf = wristFeedforward.calculate(wristEncoder.getPosition(), targetWristVelocity);
+		
+		elbow0Motor.set(elbowOutput);
+		elbow1Motor.set(elbowOutput);
+		wristMotor.set(wristOutput);
+
+		SmartDashboard.putNumber("elbow-v", elbowOutput);
+		SmartDashboard.putNumber("wrist-v", wristOutput);
+		SmartDashboard.putNumber("target-ev", targetElbowVelocity);
+		SmartDashboard.putNumber("target-wv", targetWristVelocity);
 	}
 	
 	// ------------------------------- METHODS ------------------------------- //

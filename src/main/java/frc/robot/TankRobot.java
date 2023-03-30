@@ -10,9 +10,11 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.ArmAlwaysPid;
 import frc.robot.subsystems.DriveBase;
+import frc.robot.subsystems.Hand;
 
 
 /**
@@ -27,11 +29,12 @@ public class TankRobot extends TimedRobot {
 	private final DriveBase drive = new DriveBase();
 	// private final Arm arm = new Arm();
 	private final ArmAlwaysPid arm = new ArmAlwaysPid();
-
+	// private final Hand hand = new Hand();
 
 	// controllers + joystick limiters
 	private final XboxController driveController = new XboxController(1);
 	private final XboxController armController = new XboxController(0);
+	private final CommandXboxController carmController = new CommandXboxController(0);
 
 	private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(3);
 	private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(3);
@@ -85,27 +88,26 @@ public class TankRobot extends TimedRobot {
 		joystickBaseDrive();
 		joystickArmDrive(speedModArm);
 
-		
 
 		if(armController.getLeftBumper()) {
-			arm.setHandSpeed(-1);
+			arm.setHandSpeed(-0.5);
 			SmartDashboard.putString("hand", "in");
 			holding = true;
 		}
 		else if(armController.getRightBumper()) {
-			arm.setHandSpeed(1);
+			arm.setHandSpeed(0.5);
 			SmartDashboard.putString("hand", "out");
 			holding = false;
 		}
 		else {
-			if(holding) {
-				arm.setHandSpeed(-0.1);
-				SmartDashboard.putString("hand", "holding");
-			}
-			else {
+			// if(holding) {
+			// 	arm.setHandSpeed(-0.1);
+			// 	SmartDashboard.putString("hand", "holding");
+			// }
+			// else {
 				arm.stopHand();
 				SmartDashboard.putString("hand", "stopped");
-			}
+			// }
 		}
 	}
 
@@ -161,6 +163,7 @@ public class TankRobot extends TimedRobot {
 				sgnsqr(armController.getRightY()) * arm.wristSpeed
 			);
 		}
+		arm.updateVelocityController();
 	}
 
 	// square a number while keeping its sign

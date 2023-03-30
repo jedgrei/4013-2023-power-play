@@ -36,6 +36,9 @@ public class Arm extends SubsystemBase {
 	public static final int elbowCurrentLimit = 25;
 	public static final int wristCurrentLimit = 35;
 
+	public static final double elbowOffset = 0;
+	public static final double wristOffset = 0;
+
 	// motor/encoder ports
     // TODO: find arm ports
 	public static final int elbow0Port = 6; //cim4
@@ -108,6 +111,16 @@ public class Arm extends SubsystemBase {
         elbowEncoder = wristMotor.getAbsoluteEncoder(Type.kDutyCycle);
 		wristEncoder = handMotor.getAbsoluteEncoder(Type.kDutyCycle);
 
+
+		elbowEncoder.setPositionConversionFactor(2 * Math.PI);
+		elbowEncoder.setPositionConversionFactor(2 * Math.PI);
+		wristEncoder.setPositionConversionFactor(2 * Math.PI);
+		wristEncoder.setPositionConversionFactor(2 * Math.PI);
+
+		
+		elbowEncoder.setZeroOffset(elbowOffset);
+		wristEncoder.setZeroOffset(wristOffset);
+
 		targetElbowPosition = 0;
 		targetWristPosition = 0;
 		targetElbowVelocity = 0;
@@ -179,6 +192,24 @@ public class Arm extends SubsystemBase {
 		SmartDashboard.putNumber("target-ev", eSpeed);
 		SmartDashboard.putNumber("target-wv", wSpeed);
 	}
+
+	public void drivexy(double xSpeed, double ySpeed) {
+		double eAngle = elbowEncoder.getPosition();
+		double wAngle = wristEncoder.getPosition();
+		double eSpeed = (xSpeed/(Math.cos(eAngle) - Math.cos(wAngle - eAngle))) + (ySpeed/(Math.sin(eAngle) + Math.sin(wAngle - eAngle)));
+		double wSpeed = (xSpeed/Math.cos(wAngle - eAngle)) + (ySpeed/-Math.sin(wAngle - eAngle));
+		elbow0Motor.setVoltage(eSpeed);
+		elbow1Motor.setVoltage(eSpeed);
+		wristMotor.setVoltage(wSpeed);
+		
+		SmartDashboard.putNumber("elbow-v", eSpeed);
+		SmartDashboard.putNumber("wrist-v", wSpeed);
+		SmartDashboard.putNumber("elbow-angle", elbowEncoder.getPosition());
+		SmartDashboard.putNumber("wrist-angle", wristEncoder.getPosition());
+		SmartDashboard.putNumber("target-ev", eSpeed);
+		SmartDashboard.putNumber("target-wv", wSpeed);
+	}
+
 
 	public void driveToPosition(double ePosition, double wPosition) {
 		velocity = false;
