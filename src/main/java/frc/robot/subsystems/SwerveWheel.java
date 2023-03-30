@@ -30,8 +30,8 @@ public class SwerveWheel {
 	private static final double maxAngularAcceleration = 2 * Math.PI;
 
 	// controller constants TODO: tune nums
-	private static final double kpPower = 0.5, kiPower = 0, kdPower = 0;
-	private static final double kpSpin = 0.9, kiSpin = 0.1, kdSpin = 0.0;
+	private static final double kpPower = 3, kiPower = 0, kdPower = 0;
+	private static final double kpSpin = 0.7, kiSpin = 0.1, kdSpin = 0.0;
 	private static final double ksPower = 1, kvPower = 3;
 	private static final double ksSpin = 1, kvSpin = 0.5;
 
@@ -58,8 +58,8 @@ public class SwerveWheel {
         powerMotor = new CANSparkMax(powerPort, MotorType.kBrushless);
         spinMotor = new CANSparkMax(spinPort, MotorType.kBrushless);
 
-        powerMotor.setSmartCurrentLimit(powerCurrentLimit);
-        spinMotor.setSmartCurrentLimit(spinCurrentLimit);
+        // powerMotor.setSmartCurrentLimit(powerCurrentLimit);
+        // spinMotor.setSmartCurrentLimit(spinCurrentLimit);
 
         powerEncoder = powerMotor.getEncoder();
         spinEncoder = spinMotor.getEncoder();
@@ -115,6 +115,23 @@ public class SwerveWheel {
         powerMotor.set(powerOutput);
         spinMotor.set(spinOutput);
     }
+    
+    public void setDesiredStateNoPid(SwerveModuleState state) {
+        state = SwerveModuleState.optimize(state, new Rotation2d(spinEncoder.getPosition()));
+        // state = SwerveModuleState.optimize(state, new Rotation2d(spinEncoder.getDistance()));
+		// final double powerOutput = powerPid.calculate(powerEncoder.getVelocity(), state.speedMetersPerSecond);
+        double powerOutput = state.speedMetersPerSecond;
+		// final double powerFf = powerFeedforward.calculate(state.speedMetersPerSecond);
+		final double spinOutput = spinPid.calculate(spinEncoder.getPosition(), state.angle.getRadians());
+		// final double spinOutput = spinPid.calculate(spinEncoder.getDistance(), state.angle.getRadians());
+		// final double spinFf = spinFeedforward.calculate(spinPid.getSetpoint().velocity);
+
+        // powerMotor.set(powerOutput + powerFf);
+        // spinMotor.set(spinOutput + spinFf);
+        powerMotor.set(powerOutput);
+        spinMotor.set(spinOutput);
+    }
+
 
     public void stop() {
         powerMotor.set(0);

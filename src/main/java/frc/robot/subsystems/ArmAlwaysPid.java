@@ -18,16 +18,9 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Arm extends SubsystemBase {
+public class ArmAlwaysPid extends SubsystemBase {
 	// ------------------------------ CONSTANTS ------------------------------ //
 	// speeds
-	public static final double elbowSpeed = 3.0;
-	public static final double wristSpeed = 3.0;
-	public static final double elbowSpeedFast = 5.0;
-	public static final double wristSpeedFast = 5.0;
-	public static final double elbowSpeedSlow = 1.0;
-	public static final double wristSpeedSlow = 1.0;
-
 	public static final double maxAngularVelocityElbow = 3;
 	public static final double maxAngularVelocityWrist = 3;
 	public static final double maxAngularAccelerationElbow = 3;
@@ -88,15 +81,15 @@ public class Arm extends SubsystemBase {
 	private final ArmFeedforward wristFeedforward = new ArmFeedforward(ksWrist, kgWrist, kvWrist);
 
 	// ----------------------------- CONSTRUCTOR ----------------------------- //
-	public Arm() {
+	public ArmAlwaysPid() {
         elbow0Motor = new CANSparkMax(elbow0Port, MotorType.kBrushed);
         elbow1Motor = new CANSparkMax(elbow1Port, MotorType.kBrushed);
         wristMotor = new CANSparkMax(wristPort, MotorType.kBrushless);
 		handMotor = new CANSparkMax(handPort, MotorType.kBrushless);
 	
-		// elbow0Motor.setSmartCurrentLimit(elbowCurrentLimit);
-		// elbow1Motor.setSmartCurrentLimit(elbowCurrentLimit);
-		// wristMotor.setSmartCurrentLimit(wristCurrentLimit);
+		elbow0Motor.setSmartCurrentLimit(elbowCurrentLimit);
+		elbow1Motor.setSmartCurrentLimit(elbowCurrentLimit);
+		wristMotor.setSmartCurrentLimit(wristCurrentLimit);
 
 		elbow0Motor.setInverted(false);
 		elbow1Motor.setInverted(true);
@@ -121,7 +114,7 @@ public class Arm extends SubsystemBase {
 	// ------------------------------- PERIODIC ------------------------------ //
 	@Override
 	public void periodic() {
-		// updateControllers();
+		updateControllers();
 		SmartDashboard.putNumber("elbow angle", elbowEncoder.getPosition());
 		SmartDashboard.putNumber("wrist angle", wristEncoder.getPosition());
 	}
@@ -160,30 +153,21 @@ public class Arm extends SubsystemBase {
 			SmartDashboard.putNumber("elbow-p", elbowOutput);
 			SmartDashboard.putNumber("wrist-p", wristOutput);
 			SmartDashboard.putNumber("target-ep", targetElbowPosition);
-			SmartDashboard.putNumber("target-wp", targetWristPosition);
+			SmartDashboard.putNumber("target-wv", targetWristPosition);
 		}
 	}
 	
 	// ------------------------------- METHODS ------------------------------- //
-	public void drive(double eSpeed, double wSpeed) {
-		elbow0Motor.setVoltage(eSpeed);
-		elbow1Motor.setVoltage(eSpeed);
-		wristMotor.setVoltage(wSpeed);
-		
-		SmartDashboard.putNumber("elbow-v", eSpeed);
-		SmartDashboard.putNumber("wrist-v", wSpeed);
-		SmartDashboard.putNumber("target-ev", eSpeed);
-		SmartDashboard.putNumber("target-wv", wSpeed);
+    public void drive(double eSpeed, double wSpeed) {
+		velocity = true;
+		targetElbowVelocity = eSpeed;
+		targetWristVelocity = wSpeed;
 	}
 
 	public void driveToPosition(double ePosition, double wPosition) {
 		velocity = false;
 		targetElbowPosition = ePosition;
 		targetWristPosition = wPosition;
-	}
-
-	public void updatePid() {
-
 	}
 
 	public void stop() {

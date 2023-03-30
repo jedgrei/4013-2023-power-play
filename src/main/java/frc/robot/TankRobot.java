@@ -8,9 +8,10 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.Arm;
-import frc.robot.subsystems.SwerveDrive;
+import frc.robot.subsystems.DriveBase;
 
 
 /**
@@ -19,15 +20,16 @@ import frc.robot.subsystems.SwerveDrive;
  * the package after creating this project, you must also update the build.gradle file in the
  * project.
  */
-public class Robot extends TimedRobot {
+public class TankRobot extends TimedRobot {
 	// ------------------------------- MEMBERS ------------------------------- //
 	// subsystems
-	private final SwerveDrive swerve = new SwerveDrive();
+	private final DriveBase drive = new DriveBase();
 	private final Arm arm = new Arm();
 
 	// controllers + joystick limiters
-	private final XboxController swerveController = new XboxController(1);
+	private final XboxController driveController = new XboxController(1);
 	private final XboxController armController = new XboxController(0);
+
 	private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(3);
 	private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(3);
 	private final SlewRateLimiter rotSpeedLimiter = new SlewRateLimiter(3);
@@ -75,36 +77,23 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void teleopPeriodic() {
-		double speedModSwerve = (swerveController.getLeftTriggerAxis() > 0.5 ? 1 : (swerveController.getRightTriggerAxis() > 0.5 ? 0.6 : 0.8));
 		double speedModArm = (armController.getLeftTriggerAxis() > 0.5 ? 12 : (armController.getRightTriggerAxis() > 0.5 ? 6 : 9));
-		// joystickDrive(true);
-		// if(controller.getAButton()) {
-		// 	swerve.driveForward();
-		// }
-		// if(controller.getBButton()) {
-		// 	swerve.driveSpinToZero();
-		// }
-		// if(controller.getXButton()) {
-		// 	swerve.stop();
-		// }
-		joystickDrive(false, speedModSwerve);
-		// swerve.driveForward();
-		
-		// joystickArmDrive(speedModArm);
-		if(swerveController.getLeftBumper() && swerveController.getRightBumper() && swerveController.getXButton() && swerveController.getYButton() && swerveController.getBButton() && !swerveController.getAButton()) {
-			swerve.resetSpinEncoders();
-		}
+
+		joystickBaseDrive();
+		joystickArmDrive(speedModArm);
+
+
 		if(armController.getLeftBumper()) {
 			arm.setHandSpeed(-1);
 			holding = true;
 		}
 		else if(armController.getRightBumper()) {
-			holding = false;
 			arm.setHandSpeed(1);
+			holding = false;
 		}
 		else {
 			if(holding) {
-				arm.setHandSpeed(-0.2);
+				arm.setHandSpeed(-0.1);
 			}
 			else {
 				arm.stopHand();
@@ -112,21 +101,63 @@ public class Robot extends TimedRobot {
 		}
 	}
 
-	public void joystickDrive(boolean fieldRelative, double speedMod) {
-		final double xSpeed = speedMod * -xSpeedLimiter.calculate(MathUtil.applyDeadband(swerveController.getLeftY(), 0.05)) * SwerveDrive.maxSpeed;
-		final double ySpeed = speedMod * -ySpeedLimiter.calculate(MathUtil.applyDeadband(swerveController.getLeftX(), 0.05)) * SwerveDrive.maxSpeed;
-		final double rotSpeed = speedMod * -rotSpeedLimiter.calculate(MathUtil.applyDeadband(swerveController.getRightX(), 0.05)) * SwerveDrive.maxAngularSpeed;
-
-		// swerve.drive(xSpeed, ySpeed, rotSpeed, fieldRelative);
-		swerve.driveNoPid(xSpeed, ySpeed, rotSpeed, fieldRelative);
+	public void joystickBaseDrive() {
+		// fast mode
+		if(driveController.getLeftTriggerAxis() > 0.5) {
+			SmartDashboard.putString("basemode", "fast");
+			drive.drive(
+				sgnsqr(driveController.getLeftY()) * drive.forwardSpeedFast,
+				sgnsqr(driveController.getRightX()) * drive.rotSpeedFast
+			);
+		}
+		// slow mode
+		else if(driveController.getRightTriggerAxis() > 0.5) {
+			SmartDashboard.putString("basemode", "slow");
+			drive.drive(
+				sgnsqr(driveController.getLeftY()) * drive.forwardSpeedSlow,
+				sgnsqr(driveController.getRightX()) * drive.rotSpeedSlow
+			);
+		}
+		// normal
+		else {
+			SmartDashboard.putString("basemode", "norm");	
+			drive.drive(
+				sgnsqr(driveController.getLeftY()) * drive.forwardSpeed,
+				sgnsqr(driveController.getRightX()) * drive.rotSpeed
+			);
+		}
+		SmartDashboard.putNumber("forinp", driveController.getLeftY());
+		SmartDashboard.putNumber("rotinp", driveController.getRightX());
 	}
 
 
 	public void joystickArmDrive(double speedMod) {
-		final double elbowSpeed = speedMod * -elbowSpeedLimiter.calculate(MathUtil.applyDeadband(armController.getLeftY(), 0.05));
-		final double wristSpeed = speedMod * -wristSpeedLimiter.calculate(MathUtil.applyDeadband(armController.getRightY(), 0.05));
+		// fast mode
+		if(armController.getLeftTriggerAxis() > 0.5) {
+			arm.drive(
+				sgnsqr(armController.getLeftY()) * arm.elbowSpeedFast,
+				sgnsqr(armController.getRightY()) * arm.wristSpeedFast
+			);
+		}
+		// slow mode
+		else if(armController.getRightTriggerAxis() > 0.5) {
+			arm.drive(
+				sgnsqr(armController.getLeftY()) * arm.elbowSpeedSlow,
+				sgnsqr(armController.getRightY()) * arm.wristSpeedSlow
+			);
+		}
+		// normal
+		else {
+			arm.drive(
+				sgnsqr(armController.getLeftY()) * arm.elbowSpeed,
+				sgnsqr(armController.getRightY()) * arm.wristSpeed
+			);
+		}
+	}
 
-		arm.drive(elbowSpeed, wristSpeed);
+	// square a number while keeping its sign
+	public double sgnsqr(double n) {
+		return n * Math.abs(n);
 	}
 	
 	// --------------------------------- TEST -------------------------------- //
