@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.AutoCommand;
 import frc.robot.commands.ShortDrive;
+import frc.robot.commands.SplineTest;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.DriveBase;
 import frc.robot.subsystems.Hand;
@@ -40,6 +41,7 @@ public class RobotContainer {
 		// set up auto chooser
 		autoChooser.setDefaultOption("Short Drive", new ShortDrive(drive));
 		autoChooser.addOption("Complex Auto", new AutoCommand(drive, arm, hand));
+		autoChooser.addOption("SplineTest", new SplineTest(drive));
 		SmartDashboard.putData(autoChooser);
 	}
 
