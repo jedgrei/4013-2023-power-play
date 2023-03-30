@@ -9,6 +9,7 @@ import javax.management.relation.Relation;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.CANSparkMax.IdleMode;
 
 import edu.wpi.first.math.controller.*;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -19,9 +20,12 @@ import edu.wpi.first.wpilibj.ADIS16448_IMU;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.drive.*;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorController;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.math.kinematics.*;
 import edu.wpi.first.math.trajectory.*;
@@ -33,12 +37,12 @@ import java.util.List;
 public class DriveBase extends SubsystemBase {
 	// ------------------------------ CONSTANTS ------------------------------ //
 	// speeds
-	public final double forwardSpeed = 3.0;
-	public final double rotSpeed = 3.0;
-	public final double forwardSpeedFast = 5.0;
-	public final double rotSpeedFast = 5.0;
-	public final double forwardSpeedSlow = 1.0;
-	public final double rotSpeedSlow = 1.0;
+	public final double forwardSpeed = 6.0;
+	public final double rotSpeed = 6.0;
+	public final double forwardSpeedFast = 12.0;
+	public final double rotSpeedFast = 12.0;
+	public final double forwardSpeedSlow = 3.0;
+	public final double rotSpeedSlow = 3.0;
 
 	public final double ksVolts = 0.22;
     public final double kvVoltSecondsPerMeter = 1.98;
@@ -92,6 +96,11 @@ public class DriveBase extends SubsystemBase {
 		left1Motor.setInverted(true);
 		right0Motor.setInverted(true);
 		right1Motor.setInverted(false);
+
+		left0Motor.setIdleMode(IdleMode.kCoast);
+		left1Motor.setIdleMode(IdleMode.kCoast);
+		right0Motor.setIdleMode(IdleMode.kCoast);
+		right1Motor.setIdleMode(IdleMode.kCoast);
 		
 		leftMotors = new MotorControllerGroup(left0Motor, left1Motor);
 		rightMotors = new MotorControllerGroup(left0Motor, left1Motor);
@@ -163,5 +172,24 @@ public class DriveBase extends SubsystemBase {
 		leftMotors.setVoltage(leftVolts);
 		rightMotors.setVoltage(rightVolts);
 		diffDrive.feed();
+	}
+	
+	// ------------------------------- COMMANDS ------------------------------ //
+	public CommandBase driveForward(double speed) {
+		return runOnce(() -> {
+			left0Motor.set(speed);
+			left1Motor.set(speed);
+			right0Motor.set(speed);
+			right1Motor.set(speed);
+		});
+	}
+
+	public CommandBase stop() {
+		return runOnce(() -> {
+			left0Motor.set(0);
+			left1Motor.set(0);
+			right0Motor.set(0);
+			right1Motor.set(0);
+		});
 	}
 }
