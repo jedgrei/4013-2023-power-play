@@ -88,14 +88,13 @@ public class TankRobot extends TimedRobot {
 		joystickBaseDrive();
 		joystickArmDrive(speedModArm);
 
-
 		if(armController.getLeftBumper()) {
-			arm.setHandSpeed(-0.5);
+			arm.setHandSpeed(-1);
 			SmartDashboard.putString("hand", "in");
 			holding = true;
 		}
 		else if(armController.getRightBumper()) {
-			arm.setHandSpeed(0.5);
+			arm.setHandSpeed(1);
 			SmartDashboard.putString("hand", "out");
 			holding = false;
 		}
