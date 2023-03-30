@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.ArmAlwaysPid;
 import frc.robot.subsystems.DriveBase;
 
 
@@ -24,7 +25,9 @@ public class TankRobot extends TimedRobot {
 	// ------------------------------- MEMBERS ------------------------------- //
 	// subsystems
 	private final DriveBase drive = new DriveBase();
-	private final Arm arm = new Arm();
+	// private final Arm arm = new Arm();
+	private final ArmAlwaysPid arm = new ArmAlwaysPid();
+
 
 	// controllers + joystick limiters
 	private final XboxController driveController = new XboxController(1);
@@ -82,21 +85,26 @@ public class TankRobot extends TimedRobot {
 		joystickBaseDrive();
 		joystickArmDrive(speedModArm);
 
+		
 
 		if(armController.getLeftBumper()) {
 			arm.setHandSpeed(-1);
+			SmartDashboard.putString("hand", "in");
 			holding = true;
 		}
 		else if(armController.getRightBumper()) {
 			arm.setHandSpeed(1);
+			SmartDashboard.putString("hand", "out");
 			holding = false;
 		}
 		else {
 			if(holding) {
 				arm.setHandSpeed(-0.1);
+				SmartDashboard.putString("hand", "holding");
 			}
 			else {
 				arm.stopHand();
+				SmartDashboard.putString("hand", "stopped");
 			}
 		}
 	}

@@ -22,11 +22,11 @@ public class Arm extends SubsystemBase {
 	// ------------------------------ CONSTANTS ------------------------------ //
 	// speeds
 	public static final double elbowSpeed = 3.0;
-	public static final double wristSpeed = 3.0;
+	public static final double wristSpeed = 9.0;
 	public static final double elbowSpeedFast = 5.0;
-	public static final double wristSpeedFast = 5.0;
+	public static final double wristSpeedFast = 12.0;
 	public static final double elbowSpeedSlow = 1.0;
-	public static final double wristSpeedSlow = 1.0;
+	public static final double wristSpeedSlow = 6.0;
 
 	public static final double maxAngularVelocityElbow = 3;
 	public static final double maxAngularVelocityWrist = 3;
@@ -42,6 +42,8 @@ public class Arm extends SubsystemBase {
 	public static final int elbow1Port = 7; //cim1
 	public static final int wristPort = 8; //arm1
     public static final int handPort = 17;
+
+
 
     // contoller constants TODO: tune nums
     private static final double kpElbow = 1, kiElbow = 0, kdElbow = 0;
@@ -172,6 +174,8 @@ public class Arm extends SubsystemBase {
 		
 		SmartDashboard.putNumber("elbow-v", eSpeed);
 		SmartDashboard.putNumber("wrist-v", wSpeed);
+		SmartDashboard.putNumber("elbow-angle", elbowEncoder.getPosition());
+		SmartDashboard.putNumber("wrist-angle", wristEncoder.getPosition());
 		SmartDashboard.putNumber("target-ev", eSpeed);
 		SmartDashboard.putNumber("target-wv", wSpeed);
 	}

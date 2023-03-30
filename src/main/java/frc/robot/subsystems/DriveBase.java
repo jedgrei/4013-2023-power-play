@@ -68,6 +68,11 @@ public class DriveBase extends SubsystemBase {
 	public DriveBase() {
 		rightMotors.setInverted(true);
 
+		left0Motor.setSmartCurrentLimit(40);
+		left1Motor.setSmartCurrentLimit(40);
+		right0Motor.setSmartCurrentLimit(40);
+		right1Motor.setSmartCurrentLimit(40);
+
 		// left0Motor.setIdleMode(IdleMode.kCoast);
 		// left1Motor.setIdleMode(IdleMode.kCoast);
 		// right0Motor.setIdleMode(IdleMode.kCoast);
@@ -90,8 +95,8 @@ public class DriveBase extends SubsystemBase {
 		// diffDrive.arcadeDrive(forSpeed, rotSpeed, false);
 		left0Motor.set(forSpeed + rotSpeed);
 		left1Motor.set(forSpeed + rotSpeed);
-		right0Motor.set(forSpeed - rotSpeed);
-		right1Motor.set(forSpeed - rotSpeed);
+		right0Motor.set(-forSpeed + rotSpeed);
+		right1Motor.set(-forSpeed + rotSpeed);
 		SmartDashboard.putNumber("forspeed", forSpeed);
 		SmartDashboard.putNumber("rotspeed", rotSpeed);
 		SmartDashboard.putNumber("leftspeed", forSpeed + rotSpeed);

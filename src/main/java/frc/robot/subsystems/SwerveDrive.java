@@ -113,23 +113,23 @@ public class SwerveDrive extends SubsystemBase {
 		rearRight.setDesiredState(states[2]);
 		rearLeft.setDesiredState(states[3]);
 
-		SmartDashboard.putNumber("tflp", states[0].speedMetersPerSecond);
-		SmartDashboard.putNumber("tfrp", states[1].speedMetersPerSecond);
-		SmartDashboard.putNumber("trrp", states[2].speedMetersPerSecond);
-		SmartDashboard.putNumber("trlp", states[3].speedMetersPerSecond);
-		SmartDashboard.putNumber("tfls", states[0].angle.getDegrees());
-		SmartDashboard.putNumber("tfrs", states[1].angle.getDegrees());
-		SmartDashboard.putNumber("trrs", states[2].angle.getDegrees());
-		SmartDashboard.putNumber("trls", states[3].angle.getDegrees());
+		// SmartDashboard.putNumber("tflp", states[0].speedMetersPerSecond);
+		// SmartDashboard.putNumber("tfrp", states[1].speedMetersPerSecond);
+		// SmartDashboard.putNumber("trrp", states[2].speedMetersPerSecond);
+		// SmartDashboard.putNumber("trlp", states[3].speedMetersPerSecond);
+		// SmartDashboard.putNumber("tfls", states[0].angle.getDegrees());
+		// SmartDashboard.putNumber("tfrs", states[1].angle.getDegrees());
+		// SmartDashboard.putNumber("trrs", states[2].angle.getDegrees());
+		// SmartDashboard.putNumber("trls", states[3].angle.getDegrees());
 
-		SmartDashboard.putNumber("aflp", frontLeft.getState().speedMetersPerSecond);
-		SmartDashboard.putNumber("afrp", frontRight.getState().speedMetersPerSecond);
-		SmartDashboard.putNumber("arrp", rearRight.getState().speedMetersPerSecond);
-		SmartDashboard.putNumber("arlp", rearLeft.getState().speedMetersPerSecond);
-		SmartDashboard.putNumber("afls", frontLeft.getState().angle.getDegrees());
-		SmartDashboard.putNumber("afrs", frontRight.getState().angle.getDegrees());
-		SmartDashboard.putNumber("arrs", rearRight.getState().angle.getDegrees());
-		SmartDashboard.putNumber("arls", rearLeft.getState().angle.getDegrees());
+		// SmartDashboard.putNumber("aflp", frontLeft.getState().speedMetersPerSecond);
+		// SmartDashboard.putNumber("afrp", frontRight.getState().speedMetersPerSecond);
+		// SmartDashboard.putNumber("arrp", rearRight.getState().speedMetersPerSecond);
+		// SmartDashboard.putNumber("arlp", rearLeft.getState().speedMetersPerSecond);
+		// SmartDashboard.putNumber("afls", frontLeft.getState().angle.getDegrees());
+		// SmartDashboard.putNumber("afrs", frontRight.getState().angle.getDegrees());
+		// SmartDashboard.putNumber("arrs", rearRight.getState().angle.getDegrees());
+		// SmartDashboard.putNumber("arls", rearLeft.getState().angle.getDegrees());
 	}
 
 	public void driveNoPid(double xSpeed, double ySpeed, double rotSpeed, boolean fieldRelative) {

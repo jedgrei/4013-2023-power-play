@@ -19,6 +19,12 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ArmAlwaysPid extends SubsystemBase {
+	public static final double elbowSpeed = 3.0;
+	public static final double wristSpeed = 9.0;
+	public static final double elbowSpeedFast = 5.0;
+	public static final double wristSpeedFast = 12.0;
+	public static final double elbowSpeedSlow = 1.0;
+	public static final double wristSpeedSlow = 6.0;
 	// ------------------------------ CONSTANTS ------------------------------ //
 	// speeds
 	public static final double maxAngularVelocityElbow = 3;
