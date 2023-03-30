@@ -14,6 +14,26 @@ import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.ArmAlwaysPid;
 import frc.robot.subsystems.DriveBase;
 
+import edu.wpi.first.math.controller.*;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.ADIS16448_IMU;
+import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.drive.*;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
+import edu.wpi.first.wpilibj.motorcontrol.MotorController;
+import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.math.kinematics.*;
+import edu.wpi.first.math.trajectory.*;
+import edu.wpi.first.wpilibj2.command.*;
+import edu.wpi.first.math.trajectory.constraint.*;
+
+import java.util.List;
+
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -67,10 +87,14 @@ public class TankRobot extends TimedRobot {
 
 	// ------------------------------ AUTONOMOUS ----------------------------- //
 	@Override
-	public void autonomousInit() {}
+	public void autonomousInit() {
+		CommandScheduler.getInstance().schedule(getAutonomousCommand());
+	}
 
 	@Override
-	public void autonomousPeriodic() {}
+	public void autonomousPeriodic() {
+		CommandScheduler.getInstance().run();
+	}
 
 	// -------------------------------- TELEOP ------------------------------- //
 	@Override
@@ -184,4 +208,57 @@ public class TankRobot extends TimedRobot {
 
 	@Override
 	public void simulationPeriodic() {}
+
+	public Command getAutonomousCommand() {
+		// Create a voltage constraint to ensure we don't accelerate too fast
+		var autoVoltageConstraint =
+			new DifferentialDriveVoltageConstraint(
+				new SimpleMotorFeedforward(
+					drive.ksVolts,
+					drive.kvVoltSecondsPerMeter,
+					drive.kaVoltSecondsSquaredPerMeter),
+				drive.kinematics,
+				10);
+	
+		// Create config for trajectory
+		TrajectoryConfig config =
+			new TrajectoryConfig(
+					drive.kMaxSpeedMetersPerSecond,
+					drive.kMaxAccelerationMetersPerSecondSquared)
+				// Add kinematics to ensure max speed is actually obeyed
+				.setKinematics(drive.kinematics)
+				// Apply the voltage constraint
+				.addConstraint(autoVoltageConstraint);
+	
+		// An example trajectory to follow.  All units in meters.
+		Trajectory exampleTrajectory = TrajectoryGenerator.generateTrajectory(
+			// Start at the origin facing the +X direction
+			new Pose2d(0, 0, new Rotation2d(0)),
+			// Pass through these two interior waypoints, making an 's' curve path
+			List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
+			// End 3 meters straight ahead of where we started, facing forward
+			new Pose2d(3, 0, new Rotation2d(0)),
+			// Pass config
+			config
+		);
+	
+		RamseteCommand ramseteCommand = new RamseteCommand(
+			exampleTrajectory,
+			drive::getPose,
+			new RamseteController(drive.kRamseteB, drive.kRamseteZeta),
+			new SimpleMotorFeedforward(drive.ksVolts, drive.kvVoltSecondsPerMeter, drive.kaVoltSecondsSquaredPerMeter),
+			drive.kinematics,
+			drive::getWheelSpeeds,
+			new PIDController(drive.kPDriveVel, 0, 0),
+			new PIDController(drive.kPDriveVel, 0, 0),
+			drive::tankDriveVolts,
+			drive
+		);
+	
+		// Reset odometry to the starting pose of the trajectory.
+		drive.resetOdometry(exampleTrajectory.getInitialPose());
+	
+		// Run path following command, then stop at the end.
+		return ramseteCommand.andThen(() -> drive.tankDriveVolts(0, 0));
+	}
 }
